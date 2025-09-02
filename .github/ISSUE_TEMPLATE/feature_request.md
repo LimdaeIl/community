@@ -1,5 +1,5 @@
 ---
-name: ✨기능 개발
+name: ✨ 기능 개발
 about: 기능 개발, 리팩터링, 테스트 등
 title: "Domain: "
 labels: ["✨enhancement"]
@@ -7,7 +7,7 @@ assignees: "Limdaeil"
 ---
 
 ## 📌 작업 개요
-> 무엇을 작업할지 간단히 작성해주세요. </br>
+> 무엇을 작업할지 간단히 작성해주세요.
 
 ---
 
