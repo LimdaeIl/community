@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: community-service
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${RDS_USERNAME:local}
+    password: ${RDS_PASSWORD:local}
+    url: jdbc:mysql://${RDS_ENDPOINT:localhost}:3307/community?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true
+
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        open-in-view: false

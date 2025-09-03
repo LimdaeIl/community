@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/java,intellij+all,intellij+iml,visualstudiocode,visualstudio,kotlin,netbeans,windows,macos,gradle,groovy,redis,vue,vuejs,react,git,gitbook,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=java,intellij+all,intellij+iml,visualstudiocode,visualstudio,kotlin,netbeans,windows,macos,gradle,groovy,redis,vue,vuejs,react,git,gitbook,linux
 
+### .env ###
+.env
+
 ### Git ###
 # Created by git for backups. To disable backups in Git:
 # $ git config --global mergetool.keepBackup false
