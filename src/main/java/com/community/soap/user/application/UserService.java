@@ -1,6 +1,8 @@
 package com.community.soap.user.application;
 
 import com.community.soap.common.snowflake.Snowflake;
+import com.community.soap.user.application.exception.UserErrorCode;
+import com.community.soap.user.application.exception.UserException;
 import com.community.soap.user.application.request.SignInRequest;
 import com.community.soap.user.application.request.SignUpRequest;
 import com.community.soap.user.application.response.MyPageResponse;
@@ -9,6 +11,7 @@ import com.community.soap.user.application.response.SignUpResponse;
 import com.community.soap.user.domain.entity.User;
 import com.community.soap.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,27 +20,45 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService implements UserUseCase {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final Snowflake snowflake;
 
-    private User findByEmail(String email) {
+    private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "User with email " + email + " not found"));
+                .orElseThrow(() -> new UserException(UserErrorCode.EMAIL_NOT_FOUND));
     }
 
-    private User findByUserId(Long userId) {
+    private User findUserById(Long userId) {
         return userRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "User with id " + userId + " not found"));
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    }
+
+    private void checkEmailDuplication(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new UserException(UserErrorCode.EMAIL_DUPLICATED);
+        }
+    }
+
+    private void checkPassword(String rowPassword, String encryptedPassword) {
+        if (rowPassword == null || rowPassword.isEmpty()) {
+            throw new UserException(UserErrorCode.PASSWORD_NULL);
+        }
+
+        if (!passwordEncoder.matches(rowPassword, encryptedPassword)) {
+            throw new UserException(UserErrorCode.PASSWORD_INCORRECT);
+        }
     }
 
     @Transactional
     @Override
     public SignUpResponse signup(SignUpRequest request) {
+        checkEmailDuplication(request.email());
+
         User register = User.register(
                 snowflake.nextId(),
                 request.email(),
-                request.password()
+                passwordEncoder.encode(request.password()),
+                request.nickname()
         );
 
         userRepository.save(register);
@@ -48,19 +69,16 @@ public class UserService implements UserUseCase {
     @Transactional
     @Override
     public SignInResponse signIn(SignInRequest request) {
-        User byEmail = findByEmail(request.email());
+        User user = findUserByEmail(request.email());
+        checkPassword(request.password(), user.getPassword());
 
-        if (!byEmail.getPassword().equals(request.password())) {
-            throw new IllegalStateException("Passwords don't match");
-        }
-
-        return SignInResponse.from(byEmail);
+        return SignInResponse.from(user);
     }
 
     @Transactional(readOnly = true)
     @Override
     public MyPageResponse myPage(Long userId) {
-        User byUserId = findByUserId(userId);
+        User byUserId = findUserById(userId);
 
         return MyPageResponse.from(byUserId);
     }
@@ -68,7 +86,7 @@ public class UserService implements UserUseCase {
     @Transactional
     @Override
     public void deleteUser(Long userId) {
-        User byUserId = findByUserId(userId);
+        User byUserId = findUserById(userId);
         byUserId.delete(userId);
     }
 }

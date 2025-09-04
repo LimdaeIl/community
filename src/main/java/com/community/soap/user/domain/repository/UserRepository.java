@@ -10,4 +10,6 @@ public interface UserRepository {
     User save(User user);
 
     Optional<User> findByUserId(Long userId);
+
+    boolean existsByEmail(String email);
 }
