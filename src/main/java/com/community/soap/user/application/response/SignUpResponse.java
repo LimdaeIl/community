@@ -10,8 +10,10 @@ public record SignUpResponse(
         Long userId,
         String email,
         String nickname,
+        boolean isDeleted,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Long updatedBy
 ) {
 
     public static SignUpResponse from(User register) {
@@ -19,8 +21,10 @@ public record SignUpResponse(
                 .userId(register.getUserId())
                 .email(register.getEmail())
                 .nickname(register.getNickname())
+                .isDeleted(register.getIsDeleted())
                 .createdAt(register.getCreatedAt())
                 .updatedAt(register.getUpdatedAt())
+                .updatedBy(register.getUpdatedBy())
                 .build();
     }
 }

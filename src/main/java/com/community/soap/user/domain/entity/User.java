@@ -41,16 +41,17 @@ public class User {
     @Column(name = "updated_by")
     private Long updatedBy;
 
-    private User(Long userId, String email, String password) {
+    private User(Long userId, String email, String password, String nickname) {
         this.userId = userId;
         this.email = email;
         this.password = password;
+        this.nickname = nickname;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = null;
     }
 
-    public static User register(Long userId, String email, String password) {
-        return new User(userId, email, password);
+    public static User register(Long userId, String email, String password, String nickname) {
+        return new User(userId, email, password, nickname);
     }
 
     public void updateNickname(String nickname) {
@@ -64,7 +65,7 @@ public class User {
     }
 
     private void update(Long userId) {
-        this.userId = userId;
+        this.updatedBy = userId;
         this.updatedAt = LocalDateTime.now();
     }
 
