@@ -15,8 +15,21 @@ services:
     networks:
       - community-network
 
+  redis:
+    image: redis:8.0
+    container_name: community-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - community-redis-data:/data
+    command: [ "redis-server", "--appendonly", "yes" ]
+    networks:
+      - community-network
+
 volumes:
   community-mysql-data:
+  community-redis-data:
 
 networks:
   community-network:
