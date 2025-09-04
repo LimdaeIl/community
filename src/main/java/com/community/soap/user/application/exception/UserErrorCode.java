@@ -12,7 +12,7 @@ public enum UserErrorCode implements ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원: 회원 정보를 찾을 수 없습니다."),
 
     PASSWORD_INVALID(HttpStatus.BAD_REQUEST, "비밀번호: 비밀번호 형식이 올바르지 않습니다."),
-    PASSWORD_INCORRECT(HttpStatus.BAD_REQUEST, "비밀번호: 비밀빈호가 틀립니다."),
+    PASSWORD_INCORRECT(HttpStatus.BAD_REQUEST, "비밀번호: 비밀번호가 틀립니다."),
     PASSWORD_NULL(HttpStatus.BAD_REQUEST, "비밀번호: 비밀번호 입력은 필수입니다."),
 
 
