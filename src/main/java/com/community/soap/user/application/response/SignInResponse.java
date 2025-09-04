@@ -1,24 +1,36 @@
 package com.community.soap.user.application.response;
 
 import com.community.soap.user.domain.entity.User;
-import java.time.LocalDateTime;
+import com.community.soap.user.domain.entity.UserRole;
 import lombok.AccessLevel;
 import lombok.Builder;
 
 @Builder(access = AccessLevel.PRIVATE)
 public record SignInResponse(
+        Long userId,
         String email,
         String nickname,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        UserRole userRole,
+        String tokenType,
+        String accessToken,
+        long accessTokenExpiresIn,   // ms
+        String refreshToken,
+        long refreshTokenExpiresIn   // ms
 ) {
 
-    public static SignInResponse from(User byEmail) {
-        return SignInResponse.builder()
-                .email(byEmail.getEmail())
-                .nickname(byEmail.getNickname())
-                .createdAt(byEmail.getCreatedAt())
-                .updatedAt(byEmail.getUpdatedAt())
-                .build();
+    public static SignInResponse of(User user,
+            String accessToken, long accessTtlMs,
+            String refreshToken, long refreshTtlMs) {
+        return new SignInResponse(
+                user.getUserId(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getUserRole(),
+                "Bearer",
+                accessToken,
+                accessTtlMs,
+                refreshToken,
+                refreshTtlMs
+        );
     }
 }
