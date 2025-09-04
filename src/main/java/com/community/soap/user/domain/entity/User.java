@@ -2,6 +2,8 @@ package com.community.soap.user.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
@@ -29,6 +31,10 @@ public class User {
     @Column(name = "nickname", nullable = false, length = 12)
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_role", nullable = false)
+    private UserRole userRole;
+
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = Boolean.FALSE;
 
@@ -46,6 +52,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
+        this.userRole = UserRole.USER;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = null;
     }
