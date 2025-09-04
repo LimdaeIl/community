@@ -18,3 +18,15 @@ spring:
         show_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
         open-in-view: false
+
+  data:
+    redis:
+      port: ${REDIS_PORT}
+      host: ${REDIS_HOST}
+
+  jwt:
+    secret-access: ${ACCESS_SECRET}
+    secret-refresh: ${REFRESH_SECRET}
+    access-token-expiration: ${ACCESS-TOKEN-EXPIRATION}
+    refresh-token-expiration: ${REFRESH-TOKEN-EXPIRATION}
+

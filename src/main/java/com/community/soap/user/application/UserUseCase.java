@@ -15,4 +15,8 @@ public interface UserUseCase {
     MyPageResponse myPage(Long userId);
 
     void deleteUser(Long userId);
+
+    void logout(String authorization, String s, Long userId);
+
+    SignInResponse refresh(String refreshToken);
 }

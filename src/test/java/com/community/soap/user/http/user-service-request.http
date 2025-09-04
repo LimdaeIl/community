@@ -1,0 +1,54 @@
+### user-service: 회원가입
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test@gmail.com",
+  "password": "TESTpw12!",
+  "nickname": "testNickname"
+}
+
+> {%
+  client.global.set("email", response.body.email)
+%}
+
+### user-service: 로그인
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "TESTpw12!"
+}
+
+> {%
+  client.global.set("userId", response.body.userId.toFixed(0))
+  client.global.set("accessToken", response.body.accessToken)
+  client.global.set("refreshToken", response.body.refreshToken)
+%}
+
+### user-service: 토큰 재발급
+POST http://localhost:8080/api/v1/auth/token/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+> {%
+  client.global.set("userId", response.body.userId.toFixed(0))
+  client.global.set("accessToken", response.body.accessToken)
+  client.global.set("refreshToken", response.body.refreshToken)
+%}
+
+
+### user-service: 로그아웃
+POST http://localhost:8080/api/v1/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+X-User-Id: {{userId}}
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
