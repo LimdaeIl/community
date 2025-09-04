@@ -1,6 +1,5 @@
-package com.community.soap.common.config;
+package com.community.soap.common.snowflake;
 
-import com.community.soap.common.snowflake.Snowflake;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
