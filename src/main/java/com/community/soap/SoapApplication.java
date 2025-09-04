@@ -10,7 +10,7 @@ public class SoapApplication {
 	public static void main(String[] args) {
         // .env 파일 로드 (resources 기준 경로로)
         Dotenv dotenv = Dotenv.configure()
-                .directory("src/main/resources") // 또는 .env 의 실제 경로
+                .directory(".")
                 .ignoreIfMissing()
                 .load();
 
