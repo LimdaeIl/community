@@ -12,7 +12,7 @@ public interface UserUseCase {
 
     SignInResponse signIn(SignInRequest request);
 
-    MyPageResponse myPage(Long userId);
+    MyPageResponse me(Long userId);
 
     void deleteUser(Long userId);
 
