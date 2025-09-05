@@ -1,7 +1,6 @@
 package com.community.soap.common.aop;
 
 import static com.community.soap.common.util.AuthKeys.ATTR_USER_ROLE;
-import static com.community.soap.common.util.AuthKeys.HDR_USER_ROLE;
 
 import com.community.soap.common.exception.AppException;
 import com.community.soap.common.exception.CommonErrorCode;
@@ -27,7 +26,7 @@ public class PermissionAspect {
     @Before("@annotation(permission)")
     public void permission(JoinPoint joinPoint, Permission permission) {
         Set<UserRole> allowed = Arrays.stream(permission.value()).collect(Collectors.toSet());
-        UserRole current = resolveCurrentUserRole();
+        UserRole current = currentUserRoleOr401();
 
         if (!allowed.contains(current)) {
             log.info("권한 거부: 현재 역할={}, 허용 역할={}", current, allowed);
@@ -35,31 +34,20 @@ public class PermissionAspect {
         }
     }
 
-    private UserRole resolveCurrentUserRole() {
+    private UserRole currentUserRoleOr401() {
         ServletRequestAttributes attrs =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attrs == null) {
             log.warn("ServletRequestAttributes is null");
-            throw new AppException(CommonErrorCode.INVALID_HEADER);
+            throw new AppException(CommonErrorCode.UNAUTHORIZED);
         }
         HttpServletRequest req = attrs.getRequest();
 
         Object roleAttr = req.getAttribute(ATTR_USER_ROLE);
-        if (roleAttr instanceof UserRole) {
-            return (UserRole) roleAttr;
+        if (!(roleAttr instanceof UserRole role)) {
+            log.warn("요청에 역할 attribute가 없습니다: {}", ATTR_USER_ROLE);
+            throw new AppException(CommonErrorCode.UNAUTHORIZED);
         }
-
-        String roleHeader = req.getHeader(HDR_USER_ROLE);
-        if (roleHeader == null || roleHeader.isBlank()) {
-            log.warn("역할 헤더({}) 없음", HDR_USER_ROLE);
-            throw new AppException(CommonErrorCode.INVALID_HEADER);
-        }
-
-        try {
-            return UserRole.valueOf(roleHeader.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            log.warn("역할 파싱 실패: '{}'", roleHeader);
-            throw new AppException(CommonErrorCode.INVALID_HEADER);
-        }
+        return role;
     }
 }

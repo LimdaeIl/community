@@ -41,4 +41,4 @@ security:
       - /api/v1/auth/**
     exclude-methods:
       - OPTIONS
-    access-token-cookie: ""
+    access-token-cookie: null
