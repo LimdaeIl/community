@@ -191,7 +191,7 @@ public class UserService implements UserUseCase {
 
     @Transactional(readOnly = true)
     @Override
-    public MyPageResponse myPage(Long userId) {
+    public MyPageResponse me(Long userId) {
         User byUserId = findUserById(userId);
 
         return MyPageResponse.from(byUserId);
