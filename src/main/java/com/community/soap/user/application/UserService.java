@@ -90,7 +90,7 @@ public class UserService implements UserUseCase {
         long refreshTtlMs = jwtProvider.refreshTokenTtlOf(refreshToken).toMillis();
 
         // 3) 리프레시 토큰 해시 저장 (+ 유저-세션 인덱스)
-        String refreshHash = com.community.soap.common.util.TokenHash.sha256(refreshToken);
+        String refreshHash = TokenHash.sha256(refreshToken);
         tokenRepository.saveRefreshToken(rJti, user.getUserId(), refreshHash, refreshTtlMs);
 
         // 4) 응답 구성
