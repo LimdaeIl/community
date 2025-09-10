@@ -16,7 +16,7 @@ public interface UserUseCase {
 
     void deleteUser(Long userId);
 
-    void logout(String authorization, String s, Long userId);
+    void logout(String authorizationHeader, String refreshToken, Long userIdFromCtx);
 
     SignInResponse refresh(String refreshToken);
 }

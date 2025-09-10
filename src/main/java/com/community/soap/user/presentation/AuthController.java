@@ -1,5 +1,7 @@
 package com.community.soap.user.presentation;
 
+import com.community.soap.common.resolver.CurrentUser;
+import com.community.soap.common.resolver.CurrentUserInfo;
 import com.community.soap.user.application.UserUseCase;
 import com.community.soap.user.application.request.LogoutRequest;
 import com.community.soap.user.application.request.RefreshRequest;
@@ -49,10 +51,10 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
             @RequestHeader(name = "Authorization", required = false) String authorization,
-            @RequestHeader(name = "X-User-Id") Long userId, // 프로젝트 방식에 맞게 (예: 게이트웨이에서 주입)
-            @RequestBody LogoutRequest request
+            @RequestBody @Valid LogoutRequest request,
+            @CurrentUser CurrentUserInfo info
     ) {
-        userUseCase.logout(authorization, request.refreshToken(), userId);
+        userUseCase.logout(authorization, request.refreshToken(), info.userId());
         return ResponseEntity.ok(LogoutResponse.ok());
     }
 
