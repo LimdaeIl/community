@@ -104,30 +104,47 @@ public class UserService implements UserUseCase {
      */
     @Transactional
     @Override
-    public void logout(String authorizationHeader, String refreshToken, Long userId) {
-        // 1) Access 무효화
-        if (authorizationHeader != null && !authorizationHeader.isBlank()) {
-            String aJti = jwtProvider.getJti(authorizationHeader);
-            long aTtlMs = jwtProvider.accessTokenTtlOf(authorizationHeader).toMillis();
-            if (aTtlMs > 0) {
-                tokenRepository.blacklistAccessJti(aJti, aTtlMs);
-            }
-        }
-
-        // 2) Refresh 폐기
+    public void logout(String authorizationHeader, String refreshToken, Long userIdFromCtx) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            // refresh 없이 오는 로그아웃도 허용할지 정책적으로 결정. 여기선 필요로 가정.
             throw new TokenException(JwtErrorCode.INVALID_BEARER_TOKEN);
         }
 
-        String rJti = jwtProvider.getRefreshJti(refreshToken);
+        // 0) RT 소유자 확인
+        Long userIdFromRt = jwtProvider.getUserIdFromRefresh(refreshToken);
+        if (!userIdFromRt.equals(userIdFromCtx)) {
+            throw new TokenException(JwtErrorCode.INVALID_BEARER_TOKEN);
+        }
 
-        // 저장된 해시와 일치해야만 본인 토큰
+        // (선택) RT Claim 확인: rJti가 정말 이 유저의 세션인지
+        String rJti = jwtProvider.getRefreshJti(refreshToken);
+        if (!tokenRepository.getUserRefreshJtis(userIdFromCtx).contains(rJti)) {
+            throw new TokenException(JwtErrorCode.INVALID_BEARER_TOKEN);
+        }
+
+        // 1) Access 무효화 (있을 때만, 그리고 소유자 일치 시)
+        if (authorizationHeader != null && !authorizationHeader.isBlank()) {
+            try {
+                Long userIdFromAt = jwtProvider.getUserId(authorizationHeader);
+                if (userIdFromAt.equals(userIdFromCtx)) {
+                    String aJti = jwtProvider.getJti(authorizationHeader);
+                    long aTtlMs = jwtProvider.accessTokenTtlOf(authorizationHeader).toMillis();
+                    if (aTtlMs > 0) {
+                        tokenRepository.blacklistAccessJti(aJti, aTtlMs); // setIfAbsent로 TTL 연장 방지
+                    }
+                } // else: AT 소유자 불일치 → AT 블랙리스트 생략(또는 400/403 반환 정책 가능)
+            } catch (TokenException e) {
+                // AT 만료/형식오류 등은 로그만 남기고 넘어가도 됨(로그아웃의 본질은 RT 폐기)
+                // log.debug("ignore invalid access on logout", e);
+            }
+        }
+
+        // 2) RT 본인 검증(해시) + 블랙리스트 + 저장소 정리
         String inputHash = TokenHash.sha256(refreshToken);
         String storedHash = tokenRepository.getRefreshTokenHashByJti(rJti)
-                .orElseThrow(() -> new TokenException(JwtErrorCode.INVALID_BEARER_TOKEN));
+                .orElse(null);
 
-        if (!storedHash.equals(inputHash)) {
+        // 멱등성: 이미 지워졌다면 "이미 처리됨"으로 넘어가도 운영이 편하다
+        if (storedHash != null && !storedHash.equals(inputHash)) {
             throw new TokenException(JwtErrorCode.TAMPERED_TOKEN);
         }
 
@@ -136,9 +153,8 @@ public class UserService implements UserUseCase {
             tokenRepository.blacklistRefreshJti(rJti, rTtlMs);
         }
 
-        // 저장소에서 제거 + 유저 인덱스에서 제거
-        tokenRepository.deleteRefreshTokenByJti(rJti);
-        tokenRepository.removeUserRefreshIndex(userId, rJti);
+        tokenRepository.deleteRefreshTokenByJti(rJti);           // RT 해시 삭제
+        tokenRepository.removeUserRefreshIndex(userIdFromCtx, rJti); // 세션 인덱스 제거
     }
 
     @Transactional
@@ -175,12 +191,12 @@ public class UserService implements UserUseCase {
         tokenRepository.removeUserRefreshIndex(userId, rJti);
 
         // 3) 새 토큰 발급 및 저장
-        String newAccess  = jwtProvider.generateAccessToken(user.getUserId(), user.getUserRole());
+        String newAccess = jwtProvider.generateAccessToken(user.getUserId(), user.getUserRole());
         String newRefresh = jwtProvider.generateRefreshToken(user.getUserId());
 
-        String newRJti     = jwtProvider.getRefreshJti(newRefresh);
-        long   accessTtlMs = jwtProvider.accessTokenTtlOf(newAccess).toMillis();
-        long   refreshTtlMs= jwtProvider.refreshTokenTtlOf(newRefresh).toMillis();
+        String newRJti = jwtProvider.getRefreshJti(newRefresh);
+        long accessTtlMs = jwtProvider.accessTokenTtlOf(newAccess).toMillis();
+        long refreshTtlMs = jwtProvider.refreshTokenTtlOf(newRefresh).toMillis();
 
         String newRHash = TokenHash.sha256(newRefresh);
         tokenRepository.saveRefreshToken(newRJti, userId, newRHash, refreshTtlMs);
