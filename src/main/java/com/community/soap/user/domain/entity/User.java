@@ -66,7 +66,7 @@ public class User {
         update(userId);
     }
 
-    public void delete(Long userId) {
+    public void softDelete(Long userId) {
         this.isDeleted = Boolean.TRUE;
         update(userId);
     }

@@ -1,5 +1,6 @@
 package com.community.soap.user.application;
 
+import com.community.soap.common.resolver.CurrentUserInfo;
 import com.community.soap.user.application.request.SignInRequest;
 import com.community.soap.user.application.request.SignUpRequest;
 import com.community.soap.user.application.response.MyPageResponse;
@@ -12,9 +13,11 @@ public interface UserUseCase {
 
     SignInResponse signIn(SignInRequest request);
 
-    MyPageResponse me(Long userId);
+    MyPageResponse me(CurrentUserInfo info);
 
-    void deleteUser(Long userId);
+    void deleteUserAsAdmin(Long targetUserId);
+
+    void deleteMe(String authorizationHeader, Long userIdFromCtx);
 
     void logout(String authorizationHeader, String refreshToken, Long userIdFromCtx);
 

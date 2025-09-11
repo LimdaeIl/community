@@ -3,6 +3,7 @@ package com.community.soap.user.application;
 import com.community.soap.common.jwt.JwtErrorCode;
 import com.community.soap.common.jwt.JwtProvider;
 import com.community.soap.common.jwt.TokenException;
+import com.community.soap.common.resolver.CurrentUserInfo;
 import com.community.soap.common.snowflake.Snowflake;
 import com.community.soap.common.util.TokenHash;
 import com.community.soap.user.application.exception.UserErrorCode;
@@ -15,6 +16,8 @@ import com.community.soap.user.application.response.SignUpResponse;
 import com.community.soap.user.domain.entity.User;
 import com.community.soap.user.domain.repository.TokenRepository;
 import com.community.soap.user.domain.repository.UserRepository;
+import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,12 +50,12 @@ public class UserService implements UserUseCase {
         }
     }
 
-    private void checkPassword(String rowPassword, String encryptedPassword) {
-        if (rowPassword == null || rowPassword.isEmpty()) {
+    private void checkPassword(String rawPassword, String encryptedPassword) {
+        if (rawPassword == null || rawPassword.isEmpty()) {
             throw new UserException(UserErrorCode.PASSWORD_NULL);
         }
 
-        if (!passwordEncoder.matches(rowPassword, encryptedPassword)) {
+        if (!passwordEncoder.matches(rawPassword, encryptedPassword)) {
             throw new UserException(UserErrorCode.PASSWORD_INCORRECT);
         }
     }
@@ -97,10 +100,9 @@ public class UserService implements UserUseCase {
         return SignInResponse.of(user, accessToken, accessTtlMs, refreshToken, refreshTtlMs);
     }
 
+
     /**
-     * 로그아웃:
-     * 1) Access jti 블랙리스트(즉시 효과)
-     * 2) Refresh jti 블랙리스트 + 저장소에서 제거 + 유저 인덱스 제거
+     * 로그아웃: 단일 세션(rJti)만 정확히 폐기. - AT는 소유자 일치 시 블랙리스트 - RT는 rJti 단위로 검증/블랙리스트/삭제/인덱스 제거
      */
     @Transactional
     @Override
@@ -109,52 +111,23 @@ public class UserService implements UserUseCase {
             throw new TokenException(JwtErrorCode.INVALID_BEARER_TOKEN);
         }
 
-        // 0) RT 소유자 확인
         Long userIdFromRt = jwtProvider.getUserIdFromRefresh(refreshToken);
         if (!userIdFromRt.equals(userIdFromCtx)) {
             throw new TokenException(JwtErrorCode.INVALID_BEARER_TOKEN);
         }
 
-        // (선택) RT Claim 확인: rJti가 정말 이 유저의 세션인지
         String rJti = jwtProvider.getRefreshJti(refreshToken);
-        if (!tokenRepository.getUserRefreshJtis(userIdFromCtx).contains(rJti)) {
+        if (!tokenRepository.hasUserRefreshJti(userIdFromCtx, rJti)) {
             throw new TokenException(JwtErrorCode.INVALID_BEARER_TOKEN);
         }
 
-        // 1) Access 무효화 (있을 때만, 그리고 소유자 일치 시)
-        if (authorizationHeader != null && !authorizationHeader.isBlank()) {
-            try {
-                Long userIdFromAt = jwtProvider.getUserId(authorizationHeader);
-                if (userIdFromAt.equals(userIdFromCtx)) {
-                    String aJti = jwtProvider.getJti(authorizationHeader);
-                    long aTtlMs = jwtProvider.accessTokenTtlOf(authorizationHeader).toMillis();
-                    if (aTtlMs > 0) {
-                        tokenRepository.blacklistAccessJti(aJti, aTtlMs); // setIfAbsent로 TTL 연장 방지
-                    }
-                } // else: AT 소유자 불일치 → AT 블랙리스트 생략(또는 400/403 반환 정책 가능)
-            } catch (TokenException e) {
-                // AT 만료/형식오류 등은 로그만 남기고 넘어가도 됨(로그아웃의 본질은 RT 폐기)
-                // log.debug("ignore invalid access on logout", e);
-            }
-        }
+        // AT 블랙리스트 (소유자 일치시에만)
+        blacklistAccessIfOwner(authorizationHeader, userIdFromCtx);
 
-        // 2) RT 본인 검증(해시) + 블랙리스트 + 저장소 정리
-        String inputHash = TokenHash.sha256(refreshToken);
-        String storedHash = tokenRepository.getRefreshTokenHashByJti(rJti)
-                .orElse(null);
-
-        // 멱등성: 이미 지워졌다면 "이미 처리됨"으로 넘어가도 운영이 편하다
-        if (storedHash != null && !storedHash.equals(inputHash)) {
-            throw new TokenException(JwtErrorCode.TAMPERED_TOKEN);
-        }
-
-        long rTtlMs = jwtProvider.refreshTokenTtlOf(refreshToken).toMillis();
-        if (rTtlMs > 0) {
-            tokenRepository.blacklistRefreshJti(rJti, rTtlMs);
-        }
-
-        tokenRepository.deleteRefreshTokenByJti(rJti);           // RT 해시 삭제
-        tokenRepository.removeUserRefreshIndex(userIdFromCtx, rJti); // 세션 인덱스 제거
+        // RT 폐기 (단일 rJti) - 해시/TTL 1회 계산
+        String refreshHash = TokenHash.sha256(refreshToken);
+        long refreshTtlMs = jwtProvider.refreshTokenTtlOf(refreshToken).toMillis();
+        revokeRefreshByJti(userIdFromCtx, rJti, refreshHash, refreshTtlMs);
     }
 
     @Transactional
@@ -207,16 +180,98 @@ public class UserService implements UserUseCase {
 
     @Transactional(readOnly = true)
     @Override
-    public MyPageResponse me(Long userId) {
-        User byUserId = findUserById(userId);
+    public MyPageResponse me(CurrentUserInfo info) {
+        User byUserId = findUserById(info.userId());
 
         return MyPageResponse.from(byUserId);
     }
 
     @Transactional
     @Override
-    public void deleteUser(Long userId) {
-        User byUserId = findUserById(userId);
-        byUserId.delete(userId);
+    public void deleteMe(String authorizationHeader, Long userIdFromCtx) {
+        // 1) 사용자 존재 확인
+        User user = findUserById(userIdFromCtx);
+
+        // 2) AT 블랙리스트 + RT 전부 폐기
+        blacklistAccessIfOwner(authorizationHeader, user.getUserId());
+        revokeAllRefreshOfUser(user.getUserId());
+
+        // 3) 유저 soft-delete
+        user.softDelete(user.getUserId());
+    }
+
+    /**
+     * 관리자 강제 탈퇴: 세션 정리 + soft-delete (컨트롤러/어드바이저에서 관리자 권한 체크)
+     */
+    @Transactional
+    @Override
+    public void deleteUserAsAdmin(Long targetUserId) {
+        User target = findUserById(targetUserId);
+
+        revokeAllRefreshOfUser(target.getUserId()); // AT 모를 수 있으니 RT만 전부 폐기
+        target.softDelete(target.getUserId());
+    }
+
+    /**
+     * AT가 주어졌고 소유자가 targetUserId와 일치하면 블랙리스트 등록
+     */
+    private void blacklistAccessIfOwner(String authorizationHeader, Long targetUserId) {
+        if (authorizationHeader == null || authorizationHeader.isBlank()) {
+            return;
+        }
+
+        try {
+            Long uidFromAt = jwtProvider.getUserId(authorizationHeader);
+            if (!uidFromAt.equals(targetUserId)) {
+                return;
+            }
+
+            String aJti = jwtProvider.getJti(authorizationHeader);
+            long aTtlMs = jwtProvider.accessTokenTtlOf(authorizationHeader).toMillis();
+            if (aTtlMs > 0) {
+                tokenRepository.blacklistAccessJti(aJti, aTtlMs); // setIfAbsent로 TTL 연장 방지
+            }
+        } catch (TokenException ignore) {
+            // AT 만료/형식 오류 등은 무시 (주 목적은 RT 폐기)
+        }
+    }
+
+    /**
+     * 단일 rJti에 대한 RT 폐기(검증·블랙리스트·삭제·인덱스제거)
+     */
+    private void revokeRefreshByJti(Long userId, String rJti, String inputRefreshHash,
+            long refreshTtlMs) {
+        // 1) 멱등/위변조 방지: 저장된 해시와 비교 (저장소에 없으면 이미 처리된 것으로 간주)
+        String storedHash = tokenRepository.getRefreshTokenHashByJti(rJti).orElse(null);
+        if (storedHash != null && !storedHash.equals(inputRefreshHash)) {
+            throw new TokenException(JwtErrorCode.TAMPERED_TOKEN);
+        }
+
+        // 2) 블랙리스트 (TTL 있을 때만)
+        if (refreshTtlMs > 0) {
+            tokenRepository.blacklistRefreshJti(rJti, refreshTtlMs);
+        }
+
+        // 3) 저장소 삭제 + 인덱스 제거
+        tokenRepository.deleteRefreshTokenByJti(rJti);
+        tokenRepository.removeUserRefreshIndex(userId, rJti);
+    }
+
+    /**
+     * 해당 유저의 모든 RT 세션을 일괄 폐기(블랙리스트 가능 시 포함) -> revokeAllRefreshOfUser를 배치 API로 치환
+     */
+    private void revokeAllRefreshOfUser(Long targetUserId) {
+        // 1) rJti 전부 꺼내면서 인덱스 비우기 (원자)
+        Set<String> rJtis = tokenRepository.popAllUserRefreshJtis(targetUserId);
+        if (rJtis.isEmpty()) {
+            return;
+        }
+
+        // 2) TTL 일괄 조회(파이프라인)
+        Map<String, Long> jtiToTtl = tokenRepository.mgetRemainingRefreshTtlsMs(rJtis);
+        // 3) 블랙리스트 일괄 등록(파이프라인) – TTL 있는 것만
+        tokenRepository.mblacklistRefreshJtis(jtiToTtl);
+        // 4) RT 해시 일괄 삭제(파이프라인)
+        tokenRepository.mdeleteRefreshTokensByJtis(rJtis);
     }
 }
