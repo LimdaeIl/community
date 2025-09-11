@@ -61,3 +61,21 @@ Authorization: Bearer {{accessToken}}
 DELETE http://localhost:8080/api/v1/users/me
 Content-Type: application/json
 Authorization: Bearer {{accessToken}}
+
+
+### 이메일 인증 코드 전송
+POST http://localhost:8080/api/v1/auth/email/request-verification-code
+Content-Type: application/json
+
+{
+  "email": "optional94@naver.com"
+}
+
+### 이메일 인증 코드 검증
+POST http://localhost:8080/api/v1/auth/email/verify-code
+Content-Type: application/json
+
+{
+  "email": "optional94@naver.com",
+  "verifyCode": 833724
+}
