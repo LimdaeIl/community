@@ -11,8 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,32 +22,25 @@ public class UserController {
 
     private final UserUseCase userUseCase;
 
-    @GetMapping("/{userId}")
+    @GetMapping("/me")
     @Permission(value = {UserRole.ADMIN, UserRole.MANAGER, UserRole.USER})
     public ResponseEntity<MyPageResponse> me(
-            @PathVariable(name = "userId") Long userId
+            @CurrentUser CurrentUserInfo info
     ) {
-        MyPageResponse response = userUseCase.me(userId);
+        MyPageResponse response = userUseCase.me(info);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
     }
 
-    @PostMapping("/admin/only")
-    @Permission(UserRole.ADMIN) // ADMIN만 허용
-    public ResponseEntity<String> adminOnly(
-            @CurrentUser CurrentUserInfo currentUser
+    @Permission(value = {UserRole.ADMIN, UserRole.MANAGER, UserRole.USER})
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMe(
+            @RequestHeader(name = "Authorization", required = false) String authorization,
+            @CurrentUser CurrentUserInfo info
     ) {
-        return ResponseEntity.ok("ok" + currentUser.userId());
-    }
-
-
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(
-            @PathVariable(name = "userId") Long userId
-    ) {
-        userUseCase.deleteUser(userId);
+        userUseCase.deleteMe(authorization, info.userId());
 
         return ResponseEntity
                 .noContent()
