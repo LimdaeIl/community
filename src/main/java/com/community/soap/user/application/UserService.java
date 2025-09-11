@@ -124,9 +124,10 @@ public class UserService implements UserUseCase {
         // AT 블랙리스트 (소유자 일치시에만)
         blacklistAccessIfOwner(authorizationHeader, userIdFromCtx);
 
-        // RT 폐기 (단일 rJti)
-        revokeRefreshByJti(userIdFromCtx, rJti, TokenHash.sha256(refreshToken),
-                jwtProvider.refreshTokenTtlOf(refreshToken).toMillis());
+        // RT 폐기 (단일 rJti) - 해시/TTL 1회 계산
+        String refreshHash = TokenHash.sha256(refreshToken);
+        long refreshTtlMs = jwtProvider.refreshTokenTtlOf(refreshToken).toMillis();
+        revokeRefreshByJti(userIdFromCtx, rJti, refreshHash, refreshTtlMs);
     }
 
     @Transactional
