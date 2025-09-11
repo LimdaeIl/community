@@ -75,6 +75,4 @@ public class User {
         this.updatedBy = userId;
         this.updatedAt = LocalDateTime.now();
     }
-
-
 }

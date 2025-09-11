@@ -10,7 +10,7 @@ public class MailTemplateConfig {
     @Bean
     public ClassLoaderTemplateResolver emailTemplateResolver() {
         ClassLoaderTemplateResolver r = new ClassLoaderTemplateResolver();
-        r.setPrefix("templates/mail/"); // ← 위 템플릿 경로와 매칭
+        r.setPrefix("templates/mail/");
         r.setSuffix(".html");
         r.setTemplateMode("HTML");
         r.setCharacterEncoding("UTF-8");

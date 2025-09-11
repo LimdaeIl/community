@@ -32,8 +32,7 @@ public class ThymeleafEmailSender {
             MimeMessageHelper h = new MimeMessageHelper(mime, true, "UTF-8");
             h.setTo(to);
             h.setSubject(subject);
-            h.setFrom(new InternetAddress(fromAddress, brand, "UTF-8")); // ✅ 헤더 From
-            // h.setReplyTo(fromAddress); // 선택
+            h.setFrom(new InternetAddress(fromAddress, brand, "UTF-8"));
             h.setText(html, true);
         });
     }
