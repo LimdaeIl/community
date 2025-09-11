@@ -8,14 +8,22 @@ import com.community.soap.common.snowflake.Snowflake;
 import com.community.soap.common.util.TokenHash;
 import com.community.soap.user.application.exception.UserErrorCode;
 import com.community.soap.user.application.exception.UserException;
+import com.community.soap.user.application.request.EmailVerificationCodeRequest;
+import com.community.soap.user.application.request.EmailVerifyCodeRequest;
 import com.community.soap.user.application.request.SignInRequest;
 import com.community.soap.user.application.request.SignUpRequest;
+import com.community.soap.user.application.response.EmailVerificationCodeResponse;
 import com.community.soap.user.application.response.MyPageResponse;
 import com.community.soap.user.application.response.SignInResponse;
 import com.community.soap.user.application.response.SignUpResponse;
 import com.community.soap.user.domain.entity.User;
+import com.community.soap.user.domain.repository.EmailVerificationRepository;
 import com.community.soap.user.domain.repository.TokenRepository;
 import com.community.soap.user.domain.repository.UserRepository;
+import com.community.soap.user.persistence.external.email.EmailSender;
+import com.community.soap.user.persistence.external.email.HtmlEmailSender;
+import com.community.soap.user.persistence.external.email.ThymeleafEmailSender;
+import com.community.soap.user.persistence.external.naver.EmailVerificationProperties;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +41,12 @@ public class UserService implements UserUseCase {
 
     private final JwtProvider jwtProvider;
     private final TokenRepository tokenRepository;
+
+    private final EmailVerificationRepository emailRepo;
+    private final EmailVerificationProperties emailProps;
+    private final ThymeleafEmailSender thymeleafEmailSender;
+    private final EmailSender emailSender;
+    private final HtmlEmailSender htmlEmailSender;
 
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
@@ -274,4 +288,83 @@ public class UserService implements UserUseCase {
         // 4) RT 해시 일괄 삭제(파이프라인)
         tokenRepository.mdeleteRefreshTokensByJtis(rJtis);
     }
+
+    // ---- 이메일 인증 코드 요청 ----
+    @Override
+    public EmailVerificationCodeResponse emailVerificationCode(
+            EmailVerificationCodeRequest request) {
+        final String email = request.email();
+
+        // 이미 가입된 이메일이면 굳이 인증코드 발송 X (정책에 따라 허용 가능)
+        if (userRepository.existsByEmail(email)) {
+            throw new UserException(UserErrorCode.EMAIL_DUPLICATED);
+        }
+
+        // 차단 상태 체크
+        if (emailRepo.isBlocked(email)) {
+            throw new UserException(UserErrorCode.EMAIL_VERIFICATION_BLOCKED);
+        }
+
+        // 쿨타임 체크
+        if (emailRepo.inCooltime(email)) {
+            throw new UserException(UserErrorCode.EMAIL_VERIFICATION_COOLTIME);
+        }
+
+        // 코드 생성 (6자리)
+        String code = generate6DigitCode();
+
+        // 코드 해시 저장
+        String codeHash = TokenHash.sha256(code);
+        emailRepo.saveCodeHash(email, codeHash, emailProps.getCodeTtl());
+
+        // 쿨타임 세팅
+        emailRepo.setCooltime(email, emailProps.getCooltime());
+
+        // 메일 발송
+        thymeleafEmailSender.sendVerificationCode(email, code, emailProps.getCodeTtl(),
+                "Community SOAP");
+
+        // 응답
+        long expireMs = emailProps.getCodeTtl().toMillis();
+        return EmailVerificationCodeResponse.of(email, expireMs);
+    }
+
+    // ---- 인증 코드 검증 ----
+    @Override
+    public void emailVerifyCode(EmailVerifyCodeRequest request) {
+        final String email = request.email();
+
+        if (emailRepo.isBlocked(email)) {
+            throw new UserException(UserErrorCode.EMAIL_VERIFICATION_BLOCKED);
+        }
+
+        String storedHash = emailRepo.getCodeHash(email)
+                .orElseThrow(
+                        () -> new UserException(UserErrorCode.EMAIL_VERIFICATION_NOT_REQUESTED));
+
+        String inputHash = TokenHash.sha256(String.valueOf(request.verifyCode()));
+
+        if (!storedHash.equals(inputHash)) {
+            long attempts = emailRepo.incrementAttempts(email, emailProps.getCodeTtl());
+            if (attempts >= emailProps.getMaxAttempts()) {
+                emailRepo.block(email, emailProps.getBlockTtl());
+                emailRepo.deleteCode(email); // 코드 폐기
+            }
+            throw new UserException(UserErrorCode.EMAIL_VERIFY_CODE_MISMATCH);
+        }
+
+        // 성공: 코드/시도 수/블록 정보 정리
+        emailRepo.deleteCode(email);
+        emailRepo.resetAttempts(email);
+        emailRepo.clearVerified(email);     // 기존 플래그 제거 후
+        emailRepo.markVerified(email, emailProps.getVerifiedTtl());
+    }
+
+    private String generate6DigitCode() {
+        java.security.SecureRandom r = new java.security.SecureRandom();
+        int n = 100000 + r.nextInt(900000);
+        return String.valueOf(n);
+    }
+
+    // ... 기존 메서드들
 }

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title th:text="${brand} + ' 이메일 인증'">이메일 인증</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 40px 20px;">
+<div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 40px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);">
+
+  <div style="font-size: 20px; font-weight: bold; color: #333333; margin-bottom: 20px;">
+    📩 <span th:text="${brand}">Community</span> 이메일 인증
+  </div>
+
+  <div style="font-size: 14px; color: #555555; margin-bottom: 30px;">
+    팀의 협업과 효율적인 커뮤니케이션을 위한 서비스,
+    <span th:text="${brand}">Community</span>에 가입해주셔서 감사합니다.<br/>
+    아래 인증코드를 입력하시면 가입이 정상적으로 완료됩니다.
+  </div>
+
+  <div style="font-size: 36px; font-weight: bold; color: #2c3e50; background-color: #f1f3f5; padding: 20px; border-radius: 8px; text-align: center; letter-spacing: 4px; margin: 20px 0;"
+       th:text="${code}">
+    763999
+  </div>
+
+  <div style="font-size: 14px; color: #555555;">
+    이 코드는 <strong th:text="${minutes}">3</strong>분간 유효합니다.
+  </div>
+
+  <div style="margin-top: 40px; font-size: 12px; color: #999999; text-align: center;">
+    © <span th:text="${brand}">Community</span> Inc. All rights reserved.
+  </div>
+
+</div>
+</body>
+</html>

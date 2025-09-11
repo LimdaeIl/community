@@ -3,10 +3,13 @@ package com.community.soap.user.presentation;
 import com.community.soap.common.resolver.CurrentUser;
 import com.community.soap.common.resolver.CurrentUserInfo;
 import com.community.soap.user.application.UserUseCase;
+import com.community.soap.user.application.request.EmailVerificationCodeRequest;
+import com.community.soap.user.application.request.EmailVerifyCodeRequest;
 import com.community.soap.user.application.request.LogoutRequest;
 import com.community.soap.user.application.request.RefreshRequest;
 import com.community.soap.user.application.request.SignInRequest;
 import com.community.soap.user.application.request.SignUpRequest;
+import com.community.soap.user.application.response.EmailVerificationCodeResponse;
 import com.community.soap.user.application.response.LogoutResponse;
 import com.community.soap.user.application.response.SignInResponse;
 import com.community.soap.user.application.response.SignUpResponse;
@@ -62,4 +65,27 @@ public class AuthController {
     public ResponseEntity<SignInResponse> refresh(@RequestBody RefreshRequest request) {
         return ResponseEntity.ok(userUseCase.refresh(request.refreshToken()));
     }
+
+    @PostMapping("/email/request-verification-code")
+    public ResponseEntity<EmailVerificationCodeResponse> emailVerificationCode(
+            @Valid @RequestBody EmailVerificationCodeRequest request
+    ) {
+        EmailVerificationCodeResponse response = userUseCase.emailVerificationCode(request);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+    }
+
+    @PostMapping("/email/verify-code")
+    public ResponseEntity<Void> EmailVerifyCode(
+            @Valid @RequestBody EmailVerifyCodeRequest request
+    ) {
+        userUseCase.emailVerifyCode(request);
+
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
 }
