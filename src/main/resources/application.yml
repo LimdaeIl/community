@@ -30,6 +30,25 @@ spring:
     access-token-expiration: ${ACCESS-TOKEN-EXPIRATION}
     refresh-token-expiration: ${REFRESH-TOKEN-EXPIRATION}
 
+  mail:
+    host: smtp.naver.com
+    port: ${NAVER_MAIL_PORT}
+    username: ${NAVER_ID}
+    password: ${NAVER_PW}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          starttls:
+            enable: true
+            required: true
+          connectionTimeout: ${TIMEOUT}
+          timeout: ${TIMEOUT}
+          writeTimeout: ${TIMEOUT}
+        debug: true
+
 security:
   jwt-filter:
     exclude-paths:
@@ -41,6 +60,16 @@ security:
       - /api/v1/auth/signup
       - /api/v1/auth/sign-in
       - /api/v1/auth/token/refresh
+      - /api/v1/auth/email/request-verification-code
+      - /api/v1/auth/email/verify-code
     exclude-methods:
       - OPTIONS
     access-token-cookie: null
+
+auth:
+  email: # ← EmailVerificationProperties(@ConfigurationProperties) 바인딩
+    code-ttl: 5m                        # Duration 타입: 5분
+    cooltime: 60s                       # 재요청 쿨타임
+    max-attempts: 5                     # 최대 인증 시도
+    block-ttl: 10m                      # 시도 초과 차단 시간
+    verified-ttl: 10m                   # 검증 성공 플래그 TTL
