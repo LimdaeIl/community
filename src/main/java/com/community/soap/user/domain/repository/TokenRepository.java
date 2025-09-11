@@ -1,5 +1,6 @@
 package com.community.soap.user.domain.repository;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -21,4 +22,12 @@ public interface TokenRepository {
     void blacklistRefreshJti(String jti, long ttlMillis); // 선택
     boolean isAccessJtiBlacklisted(String jti);
     boolean isRefreshJtiBlacklisted(String jti);
+
+    Optional<Long> getRemainingRefreshTtlMs(String rJti);
+
+    // TokenRepository (선택)
+    Set<String> popAllUserRefreshJtis(Long userId); // 인덱스에서 rJti 모두 꺼내면서 비움
+    Map<String, Long> mgetRemainingRefreshTtlsMs(Set<String> rJtis); // 여러 jti TTL 일괄 조회
+    void mdeleteRefreshTokensByJtis(Set<String> rJtis); // 여러 RT 해시 일괄 삭제
+    void mblacklistRefreshJtis(Map<String, Long> jtiToTtlMs); // 여러 rJti 블랙리스트
 }
