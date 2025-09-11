@@ -20,10 +20,9 @@ import com.community.soap.user.domain.entity.User;
 import com.community.soap.user.domain.repository.EmailVerificationRepository;
 import com.community.soap.user.domain.repository.TokenRepository;
 import com.community.soap.user.domain.repository.UserRepository;
-import com.community.soap.user.persistence.external.email.EmailSender;
-import com.community.soap.user.persistence.external.email.HtmlEmailSender;
 import com.community.soap.user.persistence.external.email.ThymeleafEmailSender;
 import com.community.soap.user.persistence.external.naver.EmailVerificationProperties;
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +44,6 @@ public class UserService implements UserUseCase {
     private final EmailVerificationRepository emailRepo;
     private final EmailVerificationProperties emailProps;
     private final ThymeleafEmailSender thymeleafEmailSender;
-    private final EmailSender emailSender;
-    private final HtmlEmailSender htmlEmailSender;
 
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
@@ -329,7 +326,7 @@ public class UserService implements UserUseCase {
         return EmailVerificationCodeResponse.of(email, expireMs);
     }
 
-    // ---- 인증 코드 검증 ----
+    // ---- 이메일 인증 코드 검증 ----
     @Override
     public void emailVerifyCode(EmailVerifyCodeRequest request) {
         final String email = request.email();
@@ -361,10 +358,8 @@ public class UserService implements UserUseCase {
     }
 
     private String generate6DigitCode() {
-        java.security.SecureRandom r = new java.security.SecureRandom();
+        SecureRandom r = new SecureRandom();
         int n = 100000 + r.nextInt(900000);
         return String.valueOf(n);
     }
-
-    // ... 기존 메서드들
 }

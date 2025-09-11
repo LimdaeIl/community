@@ -62,7 +62,7 @@ public class AuthController {
     }
 
     @PostMapping("/token/refresh")
-    public ResponseEntity<SignInResponse> refresh(@RequestBody RefreshRequest request) {
+    public ResponseEntity<SignInResponse> refresh(@RequestBody @Valid RefreshRequest request) {
         return ResponseEntity.ok(userUseCase.refresh(request.refreshToken()));
     }
 
