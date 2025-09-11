@@ -117,7 +117,7 @@ public class UserService implements UserUseCase {
         }
 
         String rJti = jwtProvider.getRefreshJti(refreshToken);
-        if (!tokenRepository.getUserRefreshJtis(userIdFromCtx).contains(rJti)) {
+        if (!tokenRepository.hasUserRefreshJti(userIdFromCtx, rJti)) {
             throw new TokenException(JwtErrorCode.INVALID_BEARER_TOKEN);
         }
 

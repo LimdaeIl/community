@@ -25,6 +25,9 @@ public interface TokenRepository {
 
     Optional<Long> getRemainingRefreshTtlMs(String rJti);
 
+    /** 유저의 인덱스 SET에 해당 rJti가 포함되는지 빠르게 확인 */
+    boolean hasUserRefreshJti(Long userId, String jti);
+
     // TokenRepository (선택)
     Set<String> popAllUserRefreshJtis(Long userId); // 인덱스에서 rJti 모두 꺼내면서 비움
     Map<String, Long> mgetRemainingRefreshTtlsMs(Set<String> rJtis); // 여러 jti TTL 일괄 조회

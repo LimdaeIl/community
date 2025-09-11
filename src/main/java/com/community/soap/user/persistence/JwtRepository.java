@@ -126,6 +126,12 @@ public class JwtRepository implements TokenRepository {
         return Optional.of(ttlMs);
     }
 
+    @Override
+    public boolean hasUserRefreshJti(Long userId, String jti) {
+        // Redis SISMEMBER 사용
+        return Boolean.TRUE.equals(redis.opsForSet().isMember(kUserRt(userId), jti));
+    }
+
     /**
      * 유저 인덱스(SET)에서 모든 rJti를 원자적으로 가져오고 키를 비운다. Lua: SMEMBERS key; DEL key; return members;
      */
