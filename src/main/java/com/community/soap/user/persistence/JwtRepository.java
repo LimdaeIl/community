@@ -86,12 +86,16 @@ public class JwtRepository implements TokenRepository {
     @Override
     public void deleteAllRefreshTokensOfUser(Long userId) {
         Set<String> jtis = getUserRefreshJtis(userId);
-        if (jtis != null && !jtis.isEmpty()) {
-            // RT 본문 일괄 삭제
-            redis.delete(jtis.stream().map(JwtRepository::kRt).toList());
-            // 유저 인덱스 삭제
-            redis.delete(kUserRt(userId));
+
+        if (jtis.isEmpty()) {
+            return;
         }
+
+        // RT 본문 일괄 삭제
+        redis.delete(jtis.stream().map(JwtRepository::kRt).toList());
+        // 유저 인덱스 삭제
+        redis.delete(kUserRt(userId));
+
     }
 
     @Override
