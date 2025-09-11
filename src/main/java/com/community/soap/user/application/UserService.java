@@ -50,12 +50,12 @@ public class UserService implements UserUseCase {
         }
     }
 
-    private void checkPassword(String rowPassword, String encryptedPassword) {
-        if (rowPassword == null || rowPassword.isEmpty()) {
+    private void checkPassword(String rawPassword, String encryptedPassword) {
+        if (rawPassword == null || rawPassword.isEmpty()) {
             throw new UserException(UserErrorCode.PASSWORD_NULL);
         }
 
-        if (!passwordEncoder.matches(rowPassword, encryptedPassword)) {
+        if (!passwordEncoder.matches(rawPassword, encryptedPassword)) {
             throw new UserException(UserErrorCode.PASSWORD_INCORRECT);
         }
     }
