@@ -27,7 +27,7 @@ public class UserController {
     public ResponseEntity<MyPageResponse> me(
             @CurrentUser CurrentUserInfo info
     ) {
-        MyPageResponse response = userUseCase.me(info);
+        MyPageResponse response = userUseCase.me(info.userId());
 
         return ResponseEntity
                 .status(HttpStatus.OK)

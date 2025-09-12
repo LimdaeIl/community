@@ -1,6 +1,5 @@
 package com.community.soap.user.application.port.in;
 
-import com.community.soap.common.resolver.CurrentUserInfo;
 import com.community.soap.user.application.request.EmailVerificationCodeRequest;
 import com.community.soap.user.application.request.EmailVerifyCodeRequest;
 import com.community.soap.user.application.request.SignInRequest;
@@ -16,7 +15,7 @@ public interface UserUseCase {
 
     SignInResponse signIn(SignInRequest request);
 
-    MyPageResponse me(CurrentUserInfo info);
+    MyPageResponse me(Long userId);
 
     void deleteUserAsAdmin(Long targetUserId);
 

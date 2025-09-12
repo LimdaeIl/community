@@ -3,7 +3,6 @@ package com.community.soap.user.application.service;
 import com.community.soap.common.jwt.JwtErrorCode;
 import com.community.soap.common.jwt.JwtProvider;
 import com.community.soap.common.jwt.TokenException;
-import com.community.soap.common.resolver.CurrentUserInfo;
 import com.community.soap.common.snowflake.Snowflake;
 import com.community.soap.common.util.TokenHash;
 import com.community.soap.user.application.policy.EmailVerificationPolicy;
@@ -192,8 +191,8 @@ public class UserService implements UserUseCase {
 
     @Transactional(readOnly = true)
     @Override
-    public MyPageResponse me(CurrentUserInfo info) {
-        User byUserId = findUserById(info.userId());
+    public MyPageResponse me(Long userId) {
+        User byUserId = findUserById(userId);
 
         return MyPageResponse.from(byUserId);
     }
