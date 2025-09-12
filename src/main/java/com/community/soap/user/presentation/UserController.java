@@ -3,7 +3,7 @@ package com.community.soap.user.presentation;
 import com.community.soap.common.aop.Permission;
 import com.community.soap.common.resolver.CurrentUser;
 import com.community.soap.common.resolver.CurrentUserInfo;
-import com.community.soap.user.application.UserUseCase;
+import com.community.soap.user.application.port.in.UserUseCase;
 import com.community.soap.user.application.response.MyPageResponse;
 import com.community.soap.user.domain.entity.UserRole;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class UserController {
     public ResponseEntity<MyPageResponse> me(
             @CurrentUser CurrentUserInfo info
     ) {
-        MyPageResponse response = userUseCase.me(info);
+        MyPageResponse response = userUseCase.me(info.userId());
 
         return ResponseEntity
                 .status(HttpStatus.OK)

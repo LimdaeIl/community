@@ -1,9 +1,9 @@
-package com.community.soap.user.domain.repository;
+package com.community.soap.user.application.port.out;
 
 import java.time.Duration;
 import java.util.Optional;
 
-public interface EmailVerificationRepository {
+public interface EmailVerificationRepositoryPort {
     void saveCodeHash(String email, String codeHash, Duration ttl);
     Optional<String> getCodeHash(String email);
     void deleteCode(String email);

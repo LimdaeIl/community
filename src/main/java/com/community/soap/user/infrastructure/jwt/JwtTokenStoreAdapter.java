@@ -1,6 +1,6 @@
-package com.community.soap.user.persistence;
+package com.community.soap.user.infrastructure.jwt;
 
-import com.community.soap.user.domain.repository.TokenRepository;
+import com.community.soap.user.application.port.out.TokenRepositoryPort;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
 @Repository
-public class JwtRepository implements TokenRepository {
+public class JwtTokenStoreAdapter implements TokenRepositoryPort {
 
     private final StringRedisTemplate redis;
 
@@ -92,7 +92,7 @@ public class JwtRepository implements TokenRepository {
         }
 
         // RT 본문 일괄 삭제
-        redis.delete(jtis.stream().map(JwtRepository::kRt).toList());
+        redis.delete(jtis.stream().map(JwtTokenStoreAdapter::kRt).toList());
         // 유저 인덱스 삭제
         redis.delete(kUserRt(userId));
 

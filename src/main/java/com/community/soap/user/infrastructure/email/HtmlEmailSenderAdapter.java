@@ -1,4 +1,4 @@
-package com.community.soap.user.persistence.external.email;
+package com.community.soap.user.infrastructure.email;
 
 import jakarta.mail.internet.MimeMessage;
 import java.time.Duration;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class HtmlEmailSender {
+public class HtmlEmailSenderAdapter {
 
     private final JavaMailSender mailSender;
 

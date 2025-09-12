@@ -1,6 +1,6 @@
-package com.community.soap.user.persistence.external.naver;
+package com.community.soap.user.infrastructure.email;
 
-import com.community.soap.user.domain.repository.EmailVerificationRepository;
+import com.community.soap.user.application.port.out.EmailVerificationRepositoryPort;
 import java.time.Duration;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class RedisEmailVerificationRepository implements EmailVerificationRepository {
+public class EmailVerificationRepositoryAdapter implements EmailVerificationRepositoryPort {
 
     private final StringRedisTemplate redis;
 

@@ -2,7 +2,7 @@ package com.community.soap.user.presentation;
 
 import com.community.soap.common.resolver.CurrentUser;
 import com.community.soap.common.resolver.CurrentUserInfo;
-import com.community.soap.user.application.UserUseCase;
+import com.community.soap.user.application.port.in.UserUseCase;
 import com.community.soap.user.application.request.EmailVerificationCodeRequest;
 import com.community.soap.user.application.request.EmailVerifyCodeRequest;
 import com.community.soap.user.application.request.LogoutRequest;
@@ -53,11 +53,11 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
-            @RequestHeader(name = "Authorization", required = false) String authorization,
+            @RequestHeader(name = "Authorization", required = false) String authorizationHeader,
             @RequestBody @Valid LogoutRequest request,
             @CurrentUser CurrentUserInfo info
     ) {
-        userUseCase.logout(authorization, request.refreshToken(), info.userId());
+        userUseCase.logout(authorizationHeader, request.refreshToken(), info.userId());
         return ResponseEntity.ok(LogoutResponse.ok());
     }
 

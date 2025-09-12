@@ -1,5 +1,6 @@
-package com.community.soap.user.persistence.external.email;
+package com.community.soap.user.infrastructure.email;
 
+import com.community.soap.user.application.port.out.EmailSenderPort;
 import jakarta.mail.internet.InternetAddress;
 import java.time.Duration;
 import java.util.Map;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ThymeleafEmailSender {
+public class ThymeleafEmailSenderAdapter implements EmailSenderPort {
 
     private final JavaMailSender mailSender;
     private final MailTemplateRenderer renderer;

@@ -1,4 +1,4 @@
-package com.community.soap.user.persistence.external.email;
+package com.community.soap.user.infrastructure.email;
 
 import java.util.Locale;
 import java.util.Map;
