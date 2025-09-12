@@ -1,4 +1,4 @@
-package com.community.soap.user.persistence.external.email;
+package com.community.soap.user.infrastructure.email;
 
 
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class EmailSender {
+public class EmailSenderAdapter {
 
     private final JavaMailSender mailSender;
 

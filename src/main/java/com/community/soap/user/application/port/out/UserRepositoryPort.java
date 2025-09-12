@@ -1,9 +1,9 @@
-package com.community.soap.user.domain.repository;
+package com.community.soap.user.application.port.out;
 
 import com.community.soap.user.domain.entity.User;
 import java.util.Optional;
 
-public interface UserRepository {
+public interface UserRepositoryPort {
 
     Optional<User> findByEmail(String email);
 

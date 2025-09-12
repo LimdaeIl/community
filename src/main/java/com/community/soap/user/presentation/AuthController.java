@@ -2,7 +2,7 @@ package com.community.soap.user.presentation;
 
 import com.community.soap.common.resolver.CurrentUser;
 import com.community.soap.common.resolver.CurrentUserInfo;
-import com.community.soap.user.application.UserUseCase;
+import com.community.soap.user.application.port.in.UserUseCase;
 import com.community.soap.user.application.request.EmailVerificationCodeRequest;
 import com.community.soap.user.application.request.EmailVerifyCodeRequest;
 import com.community.soap.user.application.request.LogoutRequest;

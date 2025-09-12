@@ -1,4 +1,4 @@
-package com.community.soap.user.application;
+package com.community.soap.user.application.port.in;
 
 import com.community.soap.common.resolver.CurrentUserInfo;
 import com.community.soap.user.application.request.EmailVerificationCodeRequest;
@@ -9,7 +9,6 @@ import com.community.soap.user.application.response.EmailVerificationCodeRespons
 import com.community.soap.user.application.response.MyPageResponse;
 import com.community.soap.user.application.response.SignInResponse;
 import com.community.soap.user.application.response.SignUpResponse;
-import jakarta.validation.Valid;
 
 public interface UserUseCase {
 

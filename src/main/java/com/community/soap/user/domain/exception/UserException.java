@@ -1,4 +1,4 @@
-package com.community.soap.user.application.exception;
+package com.community.soap.user.domain.exception;
 
 import com.community.soap.common.exception.AppException;
 

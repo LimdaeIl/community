@@ -1,10 +1,10 @@
-package com.community.soap.user.domain.repository;
+package com.community.soap.user.application.port.out;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public interface TokenRepository {
+public interface TokenRepositoryPort {
 
     // Refresh Token 저장/조회/삭제 (jti 기준)
     void saveRefreshToken(String jti, Long userId, String refreshTokenHash, long ttlMillis);

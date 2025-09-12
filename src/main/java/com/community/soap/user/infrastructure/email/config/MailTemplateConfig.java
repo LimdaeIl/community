@@ -1,4 +1,4 @@
-package com.community.soap.user.persistence.external.email.config;
+package com.community.soap.user.infrastructure.email.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
