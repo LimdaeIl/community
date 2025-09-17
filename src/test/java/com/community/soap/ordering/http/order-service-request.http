@@ -1,0 +1,155 @@
+@base = http://localhost:8080/api/v1
+
+### catalog: 주문용 상품 A 생성
+POST {{base}}/products
+Content-Type: application/json
+
+
+{
+  "name": "orderProduct-A",
+  "description": "for order test A",
+  "categoryId": 10,
+  "productStatus": "ACTIVE",
+  "skuCode": "order-A-001",
+  "price": 3000,
+  "stock": 5
+}
+
+> {%
+  client.global.set("productIdA", String(response.body.productId))
+  client.global.set("skuA", "order-A-001")
+%}
+
+
+### catalog: 주문용 상품 B 생성
+POST {{base}}/products
+Content-Type: application/json
+
+
+{
+  "name": "orderProduct-B",
+  "description": "for order test B",
+  "categoryId": 10,
+  "productStatus": "ACTIVE",
+  "skuCode": "order-B-001",
+  "price": 10000,
+  "stock": 2
+}
+
+> {%
+  client.global.set("productIdB", String(response.body.productId))
+  client.global.set("skuB", "order-B-001")
+%}
+
+
+### catalog: (선택) 생성된 상품 상세 확인
+GET {{base}}/products/{{productIdA}}
+
+
+###
+GET {{base}}/products/{{productIdB}}
+
+
+
+### ordering: 주문 생성 (성공)
+POST {{base}}/orders
+Content-Type: application/json
+
+
+{
+  "items": [
+    { "productId": {{productIdA}}, "skuCode": "{{skuA}}", "quantity": 2 },
+    { "productId": {{productIdB}}, "skuCode": "{{skuB}}", "quantity": 1 }
+  ],
+  "address": {
+    "receiverName": "홍길동",
+    "phone": "010-1234-5678",
+    "zipcode": "06236",
+    "address1": "서울 강남구 테헤란로 00",
+    "address2": "101동 202호"
+  }
+}
+
+> {%
+  client.global.set("orderId", String(response.body.orderId))
+%}
+
+
+### ordering: 주문 상세 조회 (구현되어 있다면)
+GET {{base}}/orders/{{orderId}}
+
+
+
+### catalog: (선택) 주문 후 재고 감소 확인
+GET {{base}}/products/{{productIdA}}
+
+
+###
+GET {{base}}/products/{{productIdB}}
+
+
+
+### ordering: 재고 부족 에러 (B의 재고=2에서 999 요청 → STOCK_INSUFFICIENT 예상)
+POST {{base}}/orders
+Content-Type: application/json
+
+
+{
+  "items": [
+    { "productId": {{productIdB}}, "skuCode": "{{skuB}}", "quantity": 999 }
+  ],
+  "address": {
+    "receiverName": "홍길동",
+    "phone": "010-1234-5678",
+    "zipcode": "06236",
+    "address1": "서울 강남구 테헤란로 00",
+    "address2": "101동 202호"
+  }
+}
+
+
+### ordering: SKU 불일치 에러 (A에 잘못된 SKU 코드 → SKU_MISMATCH 예상)
+POST {{base}}/orders
+Content-Type: application/json
+
+
+{
+  "items": [
+    { "productId": {{productIdA}}, "skuCode": "WRONG-SKU", "quantity": 1 }
+  ],
+  "address": {
+    "receiverName": "홍길동",
+    "phone": "010-1234-5678",
+    "zipcode": "06236",
+    "address1": "서울 강남구 테헤란로 00",
+    "address2": "101동 202호"
+  }
+}
+
+
+### ordering: 판매 불가 에러 (A를 INACTIVE로 변경 후 주문 → PRODUCT_NOT_SALEABLE 예상)
+PATCH {{base}}/products/{{productIdA}}/update
+Content-Type: application/json
+
+
+{
+  "productStatus": "INACTIVE"
+}
+
+###
+POST {{base}}/orders
+Content-Type: application/json
+
+
+{
+  "items": [
+    { "productId": {{productIdA}}, "skuCode": "{{skuA}}", "quantity": 1 }
+  ],
+  "address": {
+    "receiverName": "홍길동",
+    "phone": "010-1234-5678",
+    "zipcode": "06236",
+    "address1": "서울 강남구 테헤란로 00",
+    "address2": "101동 202호"
+  }
+}
