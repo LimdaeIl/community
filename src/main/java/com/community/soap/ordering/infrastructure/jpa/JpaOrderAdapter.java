@@ -1,4 +1,4 @@
-package com.community.soap.ordering.infrasturcture.jpa;
+package com.community.soap.ordering.infrastructure.jpa;
 
 import com.community.soap.ordering.application.port.out.OrderRepositoryPort;
 import com.community.soap.ordering.domain.entity.Order;

@@ -1,4 +1,4 @@
-package com.community.soap.ordering.infrasturcture.adapter;
+package com.community.soap.ordering.infrastructure.adapter;
 
 import com.community.soap.catalog.application.port.out.ProductRepositoryPort;
 import com.community.soap.catalog.domain.entity.Product;
