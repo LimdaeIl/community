@@ -1,0 +1,172 @@
+### user-service: 회원가입 (옵션)
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test@gmail.com",
+  "password": "TESTpw12!",
+  "nickname": "testNickname"
+}
+
+> {%
+  client.global.set("email", response.body.email)
+%}
+
+### user-service: 로그인
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "TESTpw12!"
+}
+
+> {%
+  client.global.set("userId", response.body.userId?.toFixed ? response.body.userId.toFixed(0) : String(response.body.userId))
+  client.global.set("accessToken", response.body.accessToken)
+  client.global.set("refreshToken", response.body.refreshToken)
+%}
+
+
+### catalog: 상품 생성 (성공)
+POST http://localhost:8080/api/v1/products
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "testProduct",
+  "description": "testProduct",
+  "categoryId": 10,
+  "productStatus": "ACTIVE",
+  "skuCode": "testCode-001",
+  "price": 4500,
+  "stock": 120
+}
+
+> {%
+  client.global.set("productId", response.body.productId.toFixed(0))
+%}
+
+
+### catalog: 상품 상세 조회
+GET http://localhost:8080/api/v1/products/{{productId}}
+Content-Type: application/json
+
+{
+}
+
+### catalog: 상품 목록 - 기본(최신순)
+GET http://localhost:8080/api/v1/products?sort=createdAt&order=desc&page=0&size=20
+Content-Type: application/json
+
+
+### catalog: 상품 목록 - 필터 조합 (카테고리 + 가격 범위 + 키워드)
+GET http://localhost:8080/api/v1/products?categoryId=10&minPrice=1000&maxPrice=5000&keyword=test&sort=createdAt&order=desc&page=0&size=20
+Content-Type: application/json
+
+
+### catalog: 상품 목록 - 가격 오름차순
+GET http://localhost:8080/api/v1/products?sort=price&order=asc&page=0&size=20
+Content-Type: application/json
+
+
+### catalog: 상품 목록 - 이름 내림차순
+GET http://localhost:8080/api/v1/products?sort=name&order=desc&page=0&size=20
+Content-Type: application/json
+
+
+### catalog: 상품 생성 - SKU 중복 에러 확인 (예상: 409/400 정책에 따라 다름)
+POST http://localhost:8080/api/v1/products
+Content-Type: application/json
+
+{
+  "name": "testProduct-dup",
+  "description": "dup",
+  "categoryId": 10,
+  "productStatus": "ACTIVE",
+  "skuCode": "testCode-001",
+  "price": 4500,
+  "stock": 10
+}
+
+
+### catalog: 상품 목록 - 잘못된 가격 범위 (예상: 400 INVALID_PRICE_RANGE)
+GET http://localhost:8080/api/v1/products?minPrice=10000&maxPrice=100
+Content-Type: application/json
+
+
+### catalog: 상품 부분 업데이트(PATCH) - 이름만 변경
+PATCH http://localhost:8080/api/v1/products/{{productId}}/update
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "testProduct-renamed"
+}
+
+
+### catalog: 상품 부분 업데이트(PATCH) - 가격/재고만 변경
+PATCH http://localhost:8080/api/v1/products/{{productId}}/update
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "price": 5500,
+  "stock": 150
+}
+
+
+### catalog: 상품 부분 업데이트(PATCH) - SKU 코드 변경 (성공 케이스)
+PATCH http://localhost:8080/api/v1/products/{{productId}}/update
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "skuCode": "testCode-002"
+}
+
+
+### 준비: 다른 상품 생성 (SKU 중복 테스트용 대상)
+POST http://localhost:8080/api/v1/products
+Content-Type: application/json
+
+{
+  "name": "anotherProduct",
+  "description": "for-dup-test",
+  "categoryId": 10,
+  "productStatus": "ACTIVE",
+  "skuCode": "testCode-003",
+  "price": 3000,
+  "stock": 10
+}
+
+> {%
+  client.global.set("otherProductId", String(response.body.productId))
+%}
+
+
+### catalog: 다른 상품의 SKU를 우리가 바꾸려는 코드로 세팅하여, 이후 중복 상황 유도
+PATCH http://localhost:8080/api/v1/products/{{otherProductId}}/update
+Content-Type: application/json
+
+{
+  "skuCode": "testCode-004"
+}
+
+
+### catalog: 원래 상품을 중복 SKU로 변경 시도 (예상: 409/400 SKU_CODE_DUPLICATED)
+PATCH http://localhost:8080/api/v1/products/{{productId}}/update
+Content-Type: application/json
+
+{
+  "skuCode": "testCode-004"
+}
+
+### (선택) 비활성 이후 수량 증가 시도 (예상: 업데이트 불가 에러)
+PUT http://localhost:8080/api/v1/products/{{productId}}/increase
+Content-Type: application/json
+
+{
+  "quantity": 1
+}
+

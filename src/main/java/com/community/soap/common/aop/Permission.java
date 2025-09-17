@@ -7,11 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Permission {
-    UserRole[] value() default {
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER
-    };
+    UserRole[] value() default {}; // 기본은 "아무 역할도 허용 X"가 아니라 "명시적으로만 체크" 용도
 }
