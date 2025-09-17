@@ -26,6 +26,10 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
@@ -67,6 +71,7 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+    outputs.dir snippetsDir
 }
 
 tasks.named('asciidoctor') {
