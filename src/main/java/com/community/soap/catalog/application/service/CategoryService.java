@@ -94,11 +94,11 @@ public class CategoryService implements CategoryUseCase {
             UpdateCategoryRequest request) {
         Category findCategory = findByCategoryId(categoryId);
 
-        if (!request.newName().isBlank()) {
-            findCategory.updateName(userId, request.newName());
+        if (request.newName() != null && !request.newName().isBlank()) {
+            findCategory.updateName(userId, request.newName().trim());
         }
 
-        if (!request.newDescription().isBlank()) {
+        if (request.newDescription() != null && !request.newDescription().isBlank()) {
             findCategory.updateDescription(userId, request.newDescription());
         }
 

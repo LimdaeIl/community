@@ -7,7 +7,6 @@ import com.community.soap.catalog.application.request.product.ProductSearchCondi
 import com.community.soap.catalog.application.request.product.UpdateProductRequest;
 import com.community.soap.catalog.application.response.product.CreateProductResponse;
 import com.community.soap.catalog.application.response.product.GetProductResponse;
-import com.community.soap.catalog.application.response.product.IncreaseProductResponse;
 import com.community.soap.common.util.PageResponse;
 
 public interface ProductUseCase {

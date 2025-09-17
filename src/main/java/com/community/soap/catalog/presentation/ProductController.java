@@ -9,6 +9,7 @@ import com.community.soap.catalog.application.request.product.UpdateProductReque
 import com.community.soap.catalog.application.response.product.CreateProductResponse;
 import com.community.soap.catalog.application.response.product.GetProductResponse;
 import com.community.soap.common.util.PageResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -75,7 +76,7 @@ public class ProductController {
     @PatchMapping("/{productId}/increase")
     public ResponseEntity<GetProductResponse> increaseProduct(
             @PathVariable Long productId,
-            @RequestBody IncreaseProductRequest request
+            @RequestBody @Valid IncreaseProductRequest request
     ) {
         GetProductResponse response = productUseCase.increaseProduct(productId, request);
 
@@ -111,7 +112,7 @@ public class ProductController {
     @DeleteMapping("/{productId}/delete")
     public ResponseEntity<GetProductResponse> softDeleteProduct(
             @PathVariable Long productId,
-            @RequestBody UpdateProductRequest request
+            @RequestBody @Valid UpdateProductRequest request
     ) {
         productUseCase.softDeleteProduct(productId, request);
 
