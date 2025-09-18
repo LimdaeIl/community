@@ -41,6 +41,9 @@ public class Order {
     @Column(name = "total_amount", nullable = false)
     private Integer totalAmount;
 
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = Boolean.FALSE;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -94,6 +97,16 @@ public class Order {
             sum += it.getLineAmount();
         }
         this.totalAmount = sum;
+    }
+
+    public void softDelete(Long userId) {
+        this.isDeleted = true;
+        update(userId);
+    }
+
+    private void update(Long userId) {
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = userId;
     }
 }
 

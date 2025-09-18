@@ -3,6 +3,7 @@ package com.community.soap.ordering.domain.exception;
 import com.community.soap.common.exception.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties.Http;
 import org.springframework.http.HttpStatus;
 
 @Getter
@@ -22,6 +23,7 @@ public enum OrderErrorCode implements ErrorCode {
     ORDER_ITEM_INVALID(HttpStatus.BAD_REQUEST, "주문: 주문 상품 정보가 올바르지 않습니다."),
     ORDER_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "주문: 주문 상품을 찾을 수 없습니다."),
     QUANTITY_INVALID(HttpStatus.BAD_REQUEST, "주문: 수량이 올바르지 않습니다."),
+    INVALID_AMOUNT_RANGE(HttpStatus.BAD_REQUEST, "주문: 전체 금액이 올바르지 않습니다."),
 
     // 배송지
     ADDRESS_INVALID(HttpStatus.BAD_REQUEST, "주문: 배송지 정보가 올바르지 않습니다."),
@@ -32,7 +34,9 @@ public enum OrderErrorCode implements ErrorCode {
     STOCK_INSUFFICIENT(HttpStatus.CONFLICT, "주문: 재고가 부족합니다."),
 
     // 결제(선택)
-    PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "주문: 결제 처리에 실패했습니다.");
+    PAYMENT_FAILED(HttpStatus.BAD_REQUEST, "주문: 결제 처리에 실패했습니다."),
+
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품: 상품 정보를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

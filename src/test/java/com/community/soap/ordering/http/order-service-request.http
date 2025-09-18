@@ -4,7 +4,6 @@
 POST {{base}}/products
 Content-Type: application/json
 
-
 {
   "name": "orderProduct-A",
   "description": "for order test A",
@@ -16,15 +15,13 @@ Content-Type: application/json
 }
 
 > {%
-  client.global.set("productIdA", String(response.body.productId))
-  client.global.set("skuA", "order-A-001")
+  client.global.set("productIdA", response.body.productId?.toFixed ? response.body.productId.toFixed(0) : String(response.body.productId));
+  client.global.set("skuA", "order-A-001");
 %}
-
 
 ### catalog: 주문용 상품 B 생성
 POST {{base}}/products
 Content-Type: application/json
-
 
 {
   "name": "orderProduct-B",
@@ -37,24 +34,13 @@ Content-Type: application/json
 }
 
 > {%
-  client.global.set("productIdB", String(response.body.productId))
-  client.global.set("skuB", "order-B-001")
+  client.global.set("productIdB", response.body.productId?.toFixed ? response.body.productId.toFixed(0) : String(response.body.productId));
+  client.global.set("skuB", "order-B-001");
 %}
 
-
-### catalog: (선택) 생성된 상품 상세 확인
-GET {{base}}/products/{{productIdA}}
-
-
-###
-GET {{base}}/products/{{productIdB}}
-
-
-
-### ordering: 주문 생성 (성공)
+### ordering: 주문 생성 #1 (성공)
 POST {{base}}/orders
 Content-Type: application/json
-
 
 {
   "items": [
@@ -71,85 +57,61 @@ Content-Type: application/json
 }
 
 > {%
-  client.global.set("orderId", String(response.body.orderId))
+  client.global.set("orderId1", String(response.body.orderId));
 %}
 
 
-### ordering: 주문 상세 조회 (구현되어 있다면)
-GET {{base}}/orders/{{orderId}}
-
-
-
-### catalog: (선택) 주문 후 재고 감소 확인
-GET {{base}}/products/{{productIdA}}
-
-
-###
-GET {{base}}/products/{{productIdB}}
-
-
-
-### ordering: 재고 부족 에러 (B의 재고=2에서 999 요청 → STOCK_INSUFFICIENT 예상)
+### ordering: 주문 생성 #2 (성공, 합계 다르게)
 POST {{base}}/orders
 Content-Type: application/json
-
-
-{
-  "items": [
-    { "productId": {{productIdB}}, "skuCode": "{{skuB}}", "quantity": 999 }
-  ],
-  "address": {
-    "receiverName": "홍길동",
-    "phone": "010-1234-5678",
-    "zipcode": "06236",
-    "address1": "서울 강남구 테헤란로 00",
-    "address2": "101동 202호"
-  }
-}
-
-
-### ordering: SKU 불일치 에러 (A에 잘못된 SKU 코드 → SKU_MISMATCH 예상)
-POST {{base}}/orders
-Content-Type: application/json
-
-
-{
-  "items": [
-    { "productId": {{productIdA}}, "skuCode": "WRONG-SKU", "quantity": 1 }
-  ],
-  "address": {
-    "receiverName": "홍길동",
-    "phone": "010-1234-5678",
-    "zipcode": "06236",
-    "address1": "서울 강남구 테헤란로 00",
-    "address2": "101동 202호"
-  }
-}
-
-
-### ordering: 판매 불가 에러 (A를 INACTIVE로 변경 후 주문 → PRODUCT_NOT_SALEABLE 예상)
-PATCH {{base}}/products/{{productIdA}}/update
-Content-Type: application/json
-
-
-{
-  "productStatus": "INACTIVE"
-}
-
-###
-POST {{base}}/orders
-Content-Type: application/json
-
 
 {
   "items": [
     { "productId": {{productIdA}}, "skuCode": "{{skuA}}", "quantity": 1 }
   ],
   "address": {
-    "receiverName": "홍길동",
-    "phone": "010-1234-5678",
-    "zipcode": "06236",
-    "address1": "서울 강남구 테헤란로 00",
-    "address2": "101동 202호"
+    "receiverName": "이몽룡",
+    "phone": "010-0000-0000",
+    "zipcode": "04524",
+    "address1": "서울 중구 세종대로 00",
+    "address2": "N/A"
   }
 }
+
+> {%
+  client.global.set("orderId2", String(response.body.orderId));
+%}
+
+### ordering: 주문 상세 조회 (검증)
+GET {{base}}/orders/{{orderId1}}
+
+###
+GET {{base}}/orders/{{orderId2}}
+
+### ordering: 주문 목록 - 기본(최신순, createdAt desc)
+GET {{base}}/orders?sort=createdAt&order=desc&page=0&size=20
+
+### ordering: 주문 목록 - 합계 오름차순(totalAmount asc)
+GET {{base}}/orders?sort=totalAmount&order=asc&page=0&size=20
+
+### ordering: 주문 목록 - 페이지네이션 확인 (size=1로 나눠서 page0/page1)
+GET {{base}}/orders?sort=createdAt&order=desc&page=0&size=1
+
+###
+GET {{base}}/orders?sort=createdAt&order=desc&page=1&size=1
+
+### ordering: 주문 목록 - 상태/기간/금액/키워드 조합
+# from/to는 예시 날짜. 필요 시 프로젝트 시간대 기준으로 수정하세요.
+GET {{base}}/orders?status=CREATED&from=2025-09-01T00:00:00&to=2025-10-01T00:00:00&minTotal=1000&maxTotal=500000&keyword=orderProduct&sort=createdAt&order=desc&page=0&size=20
+
+### ordering: 주문 목록 - SKU 키워드로 검색
+GET {{base}}/orders?keyword={{skuA}}&page=0&size=20
+
+### ordering: 주문 목록 - 특정 사용자(createdBy) 필터 (예: 0)
+GET {{base}}/orders?createdBy=0&sort=createdAt&order=desc&page=0&size=20
+
+### ordering: 주문 목록 - 잘못된 금액 범위(예상: 400)
+GET {{base}}/orders?minTotal=999999&maxTotal=100
+
+### ordering: 주문 목록 - 잘못된 날짜 범위(예상: 400)
+GET {{base}}/orders?from=2025-10-01T00:00:00&to=2025-09-01T00:00:00
