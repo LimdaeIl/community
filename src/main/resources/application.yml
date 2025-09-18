@@ -65,6 +65,11 @@ security:
       - /api/v1/categories/**
       - /api/v1/products/**
       - /api/v1/orders/**
+<<<<<<< Updated upstream
+=======
+      - /_fake_toss/v1/payments/**
+      - /api/v1/payments/**
+>>>>>>> Stashed changes
     exclude-methods:
       - OPTIONS
     access-token-cookie: null
@@ -82,3 +87,7 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
     org.hibernate.orm.jdbc.extract: TRACE
+
+toss:
+  base-url: http://localhost:8080/_fake_toss   # 우리 앱 안의 스텁 컨트롤러로 라우팅
+  secret-key: test_sk_dummy                    # 값은 의미 없음 (Basic 인코딩만 사용)
