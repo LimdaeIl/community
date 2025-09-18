@@ -98,8 +98,6 @@ public class Order {
         }
         this.totalAmount = sum;
     }
-
-<<<<<<< Updated upstream
     public void softDelete(Long userId) {
         this.isDeleted = true;
         update(userId);
@@ -108,7 +106,8 @@ public class Order {
     private void update(Long userId) {
         this.updatedAt = LocalDateTime.now();
         this.updatedBy = userId;
-=======
+    }
+
     public void markPaid() {
         if (this.orderStatus == OrderStatus.CANCELED) {
             throw new OrderException(OrderErrorCode.ORDER_ALREADY_CANCELED);
@@ -131,7 +130,6 @@ public class Order {
         }
         this.orderStatus = OrderStatus.CANCELED;
         this.updatedAt = LocalDateTime.now();
->>>>>>> Stashed changes
     }
 }
 

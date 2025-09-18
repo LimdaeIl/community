@@ -15,11 +15,8 @@ Content-Type: application/json
 }
 
 > {%
-<<<<<<< Updated upstream
   client.global.set("productIdA", response.body.productId?.toFixed ? response.body.productId.toFixed(0) : String(response.body.productId));
   client.global.set("skuA", "order-A-001");
-=======
-  client.global.set("productIdA", response.body.productId.toFixed(0))
   client.global.set("skuA", "order-A-001")
 >>>>>>> Stashed changes
 %}
@@ -39,11 +36,8 @@ Content-Type: application/json
 }
 
 > {%
-<<<<<<< Updated upstream
   client.global.set("productIdB", response.body.productId?.toFixed ? response.body.productId.toFixed(0) : String(response.body.productId));
   client.global.set("skuB", "order-B-001");
-=======
-  client.global.set("productIdB", response.body.productId.toFixed(0))
   client.global.set("skuB", "order-B-001")
 >>>>>>> Stashed changes
 %}
@@ -67,11 +61,7 @@ Content-Type: application/json
 }
 
 > {%
-<<<<<<< Updated upstream
-  client.global.set("orderId1", String(response.body.orderId));
-=======
   client.global.set("orderId", response.body.orderId.toFixed(0))
->>>>>>> Stashed changes
 %}
 
 

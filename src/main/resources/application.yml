@@ -65,11 +65,8 @@ security:
       - /api/v1/categories/**
       - /api/v1/products/**
       - /api/v1/orders/**
-<<<<<<< Updated upstream
-=======
       - /_fake_toss/v1/payments/**
       - /api/v1/payments/**
->>>>>>> Stashed changes
     exclude-methods:
       - OPTIONS
     access-token-cookie: null
