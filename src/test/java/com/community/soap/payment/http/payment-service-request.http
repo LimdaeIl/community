@@ -1,0 +1,104 @@
+@base = http://localhost:8080/api/v1
+
+### 1) 주문용 상품 A 생성
+POST {{base}}/products
+Content-Type: application/json
+
+{
+  "name": "orderProduct-A",
+  "description": "for order test A",
+  "categoryId": 10,
+  "productStatus": "ACTIVE",
+  "skuCode": "order-A-001",
+  "price": 3000,
+  "stock": 5
+}
+
+> {%
+  client.global.set("productIdA", response.body.productId.toFixed(0));
+  client.global.set("skuA", "order-A-001");
+%}
+
+### 2) 주문용 상품 B 생성
+POST {{base}}/products
+Content-Type: application/json
+
+{
+  "name": "orderProduct-B",
+  "description": "for order test B",
+  "categoryId": 10,
+  "productStatus": "ACTIVE",
+  "skuCode": "order-B-001",
+  "price": 10000,
+  "stock": 2
+}
+
+> {%
+  client.global.set("productIdB", response.body.productId.toFixed(0));
+  client.global.set("skuB", "order-B-001");
+%}
+
+### 3) 주문 생성 (A*2 + B*1 = 3000*2 + 10000*1 = 16000원 예상)
+POST {{base}}/orders
+Content-Type: application/json
+
+{
+  "items": [
+    { "productId": {{productIdA}}, "skuCode": "{{skuA}}", "quantity": 2 },
+    { "productId": {{productIdB}}, "skuCode": "{{skuB}}", "quantity": 1 }
+  ],
+  "address": {
+    "receiverName": "홍길동",
+    "phone": "010-1234-5678",
+    "zipcode": "06236",
+    "address1": "서울 강남구 테헤란로 00",
+    "address2": "101동 202호"
+  }
+}
+
+> {%
+  client.global.set("orderId", response.body.orderId.toFixed(0));
+%}
+
+### 4) 주문 상세로 totalAmount 확보
+GET {{base}}/orders/{{orderId}}
+
+> {%
+  client.global.set("orderAmount", response.body.totalAmount);
+%}
+
+### 5) (스텁) 결제 승인 - 성공(DONE) → 주문 상태 PAID로 바뀌어야 함
+POST {{base}}/payments/confirm
+Content-Type: application/json
+
+{
+  "paymentKey": "pk_test_stub_001",
+  "orderId": "{{orderId}}",
+  "amount": {{orderAmount}}
+}
+
+> {%
+  client.global.set("paymentKey", response.body.paymentKey);
+%}
+
+### 6) 주문 상태 확인 (PAID)
+GET {{base}}/orders/{{orderId}}
+
+### 7) (선택) 결제 취소 - 스텁(CANCELED) 응답, 결제 테이블 상태만 CANCELED로
+POST {{base}}/payments/{{paymentKey}}/cancel
+Content-Type: application/json
+
+{
+  "cancelReason": "단순테스트",
+  "cancelAmount": null
+}
+
+### 8) 금액 불일치 에러 확인 (400: PAYMENT_AMOUNT_MISMATCH)
+POST {{base}}/payments/confirm
+Content-Type: application/json
+
+{
+  "paymentKey": "pk_test_stub_002",
+  "orderId": "{{orderId}}",
+  "amount": {{orderAmount}}
+}

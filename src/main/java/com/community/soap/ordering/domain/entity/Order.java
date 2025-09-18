@@ -99,6 +99,7 @@ public class Order {
         this.totalAmount = sum;
     }
 
+<<<<<<< Updated upstream
     public void softDelete(Long userId) {
         this.isDeleted = true;
         update(userId);
@@ -107,6 +108,30 @@ public class Order {
     private void update(Long userId) {
         this.updatedAt = LocalDateTime.now();
         this.updatedBy = userId;
+=======
+    public void markPaid() {
+        if (this.orderStatus == OrderStatus.CANCELED) {
+            throw new OrderException(OrderErrorCode.ORDER_ALREADY_CANCELED);
+        }
+        if (this.orderStatus == OrderStatus.PAID) {
+            throw new OrderException(OrderErrorCode.ORDER_ALREADY_PAID);
+        }
+        this.orderStatus = OrderStatus.PAID;
+        this.updatedAt = LocalDateTime.now();
+        // this.updatedBy = ... 필요하면 채워넣기
+    }
+
+    // (참고) 취소 등 다른 전이도 필요하면 같은 패턴으로
+    public void markCanceled() {
+        if (this.orderStatus == OrderStatus.CANCELED) {
+            throw new OrderException(OrderErrorCode.ORDER_ALREADY_CANCELED);
+        }
+        if (this.orderStatus == OrderStatus.SHIPPED || this.orderStatus == OrderStatus.DELIVERED) {
+            throw new OrderException(OrderErrorCode.ORDER_CANNOT_CANCEL);
+        }
+        this.orderStatus = OrderStatus.CANCELED;
+        this.updatedAt = LocalDateTime.now();
+>>>>>>> Stashed changes
     }
 }
 

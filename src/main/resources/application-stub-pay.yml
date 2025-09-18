@@ -1,0 +1,3 @@
+toss:
+  base-url: http://localhost:8080/_fake_toss   # 우리 앱 안의 스텁 컨트롤러로 라우팅
+  secret-key: test_sk_dummy                    # 값은 의미 없음 (Basic 인코딩만 사용)
