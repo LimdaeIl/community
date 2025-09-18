@@ -4,6 +4,8 @@ import com.community.soap.catalog.application.port.out.ProductRepositoryPort;
 import com.community.soap.catalog.domain.entity.Product;
 import com.community.soap.ordering.application.port.out.CatalogPort;
 import com.community.soap.ordering.application.port.out.ProductSnapshot;
+import com.community.soap.ordering.domain.exception.OrderErrorCode;
+import com.community.soap.ordering.domain.exception.OrderException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +18,8 @@ public class CatalogPortAdapter implements CatalogPort {
     @Override
     public ProductSnapshot getProductSnapshot(Long productId) {
         Product p = productRepositoryPort.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("PRODUCT_NOT_FOUND: " + productId));
+                .orElseThrow(() -> new OrderException(OrderErrorCode.PRODUCT_NOT_FOUND));
+
         return new ProductSnapshot(
                 p.getProductId(),
                 p.getName(),
@@ -31,7 +34,7 @@ public class CatalogPortAdapter implements CatalogPort {
     public boolean tryReserveStock(Long productId, int quantity) {
         // V1: 비원자적 처리 (동시성 고려 X)
         Product p = productRepositoryPort.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("PRODUCT_NOT_FOUND: " + productId));
+                .orElseThrow(() -> new OrderException(OrderErrorCode.PRODUCT_NOT_FOUND));
 
         int cur = p.getSku().getStock() == null ? 0 : p.getSku().getStock();
         if (quantity <= 0) {
