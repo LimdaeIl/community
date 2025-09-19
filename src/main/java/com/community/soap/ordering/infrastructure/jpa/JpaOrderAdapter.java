@@ -4,6 +4,7 @@ import com.community.soap.ordering.application.port.out.OrderRepositoryPort;
 import com.community.soap.ordering.application.request.OrderSearchCondition;
 import com.community.soap.ordering.domain.entity.Order;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -93,4 +94,12 @@ public interface JpaOrderAdapter extends JpaRepository<Order, Long>, OrderReposi
 
         return new PageImpl<>(rows, PageRequest.of(page, size), total);
     }
+
+    @Query("""
+        select o
+        from Order o
+        left join fetch o.orderItems oi
+        where o.orderId = :orderId
+    """)
+    Optional<Order> findByIdWithItems(@Param("orderId") Long orderId);
 }

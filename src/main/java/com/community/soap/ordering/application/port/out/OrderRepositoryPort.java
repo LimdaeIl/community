@@ -12,4 +12,5 @@ public interface OrderRepositoryPort {
 
     Optional<Order> findById(Long orderId);
     Page<Order> findAllByCondition(OrderSearchCondition condition, Pageable pageable);
+    Optional<Order> findByIdWithItems(Long orderId);
 }

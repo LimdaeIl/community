@@ -7,25 +7,42 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class PaymentWriter {
 
     private final PaymentRepository paymentRepo;
     private final OrderingPort orderingPort;
 
-    @Transactional // 기본 REQUIRED: 호출 시 "여기서" 트랜잭션 시작
+    private final com.community.soap.payment.infrastructure.CatalogPort catalogPort;
+
+    @Transactional
+    public Payment markCanceled(String paymentKey, String canceledStatus) {
+        var pay = paymentRepo.findByPaymentKey(paymentKey)
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+
+        if ("CANCELED".equalsIgnoreCase(pay.getStatus())) {
+            return pay;        // 멱등
+        }
+        if (!"DONE".equalsIgnoreCase(pay.getStatus())) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_STATUS_INVALID);
+        }
+
+        pay.markCanceled(canceledStatus);
+
+        Long orderId = Long.valueOf(pay.getOrderId());
+        orderingPort.markOrderCanceled(orderId);
+
+        for (OrderLineItem it : orderingPort.getOrderLineItems(orderId)) {
+            catalogPort.increaseStock(it.productId(), it.skuCode(), it.quantity());
+        }
+        return pay;
+    }
+
+    @Transactional
     public Payment saveApprovedAndMarkOrderPaid(Payment pay, Long orderId) {
         Payment saved = paymentRepo.save(pay);
         orderingPort.markOrderPaid(orderId);
         return saved;
-    }
-
-    @Transactional
-    public Payment markCanceled(String paymentKey, String canceledStatus) {
-        Payment pay = paymentRepo.findByPaymentKey(paymentKey)
-                .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
-        pay.markCanceled(canceledStatus);
-        return pay;
     }
 }

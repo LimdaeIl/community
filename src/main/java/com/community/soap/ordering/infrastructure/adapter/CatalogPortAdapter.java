@@ -6,6 +6,8 @@ import com.community.soap.ordering.application.port.out.CatalogPort;
 import com.community.soap.ordering.application.port.out.ProductSnapshot;
 import com.community.soap.ordering.domain.exception.OrderErrorCode;
 import com.community.soap.ordering.domain.exception.OrderException;
+import com.community.soap.payment.domain.exception.PaymentErrorCode;
+import com.community.soap.payment.domain.exception.PaymentException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

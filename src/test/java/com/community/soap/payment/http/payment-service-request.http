@@ -78,14 +78,14 @@ Content-Type: application/json
 }
 
 > {%
-  client.global.set("paymentKey", response.body.paymentKey);
+  client.global.set("paymentKey", response.body.paymentKey.toFixed(0));
 %}
 
 ### 6) 주문 상태 확인 (PAID)
 GET {{base}}/orders/{{orderId}}
 
 ### 7) (선택) 결제 취소 - 스텁(CANCELED) 응답, 결제 테이블 상태만 CANCELED로
-POST {{base}}/payments/{{paymentKey}}/cancel
+POST {{base}}/payments/tviva2025091920554293A60/cancel
 Content-Type: application/json
 
 {
