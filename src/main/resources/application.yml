@@ -57,16 +57,23 @@ security:
       - /v3/api-docs/**
       - /swagger-ui/**
       - /error
-      - /api/v1/auth/signup
-      - /api/v1/auth/sign-in
-      - /api/v1/auth/token/refresh
-      - /api/v1/auth/email/request-verification-code
-      - /api/v1/auth/email/verify-code
+
+      # 공개 API
+      - /api/v1/auth/**
       - /api/v1/categories/**
       - /api/v1/products/**
       - /api/v1/orders/**
-      - /_fake_toss/v1/payments/**
       - /api/v1/payments/**
+      - /_fake_toss/**
+
+      # 정적 리소스
+      - /checkout.html
+      - /favicon.ico
+      - /v1
+      - /v1/**
+      - /log
+      - /logs
+      - /logs/**
     exclude-methods:
       - OPTIONS
     access-token-cookie: null
@@ -85,6 +92,16 @@ logging:
     org.hibernate.orm.jdbc.bind: TRACE
     org.hibernate.orm.jdbc.extract: TRACE
 
+#toss:
+#  base-url: http://localhost:8080/_fake_toss
+#  secret-key: test_sk_dummy
 toss:
-  base-url: http://localhost:8080/_fake_toss   # 우리 앱 안의 스텁 컨트롤러로 라우팅
-  secret-key: test_sk_dummy                    # 값은 의미 없음 (Basic 인코딩만 사용)
+  base-url: https://api.tosspayments.com
+  clientKey: test_gck_docs_Ovk5rK1EwkEbP0W43n07Xlzm
+  secretKey: test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R
+
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+      pattern: "%t %m %U %s"

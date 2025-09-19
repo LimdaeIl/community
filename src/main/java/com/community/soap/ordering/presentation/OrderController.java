@@ -74,7 +74,7 @@ public class OrderController {
     // 주문 상태 수정
 
     // 주문 삭제(Soft Delete)
-    @DeleteMapping("/{orderId{")
+    @DeleteMapping("/{orderId}")
     public ResponseEntity<Void> deleteOrder(
             @PathVariable Long orderId
     ) {

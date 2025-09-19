@@ -1,14 +1,15 @@
 package com.community.soap.payment.presentation;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
-
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Profile("stub-pay")
 @RestController
 @RequestMapping("/_fake_toss/v1/payments")
 public class FakeTossController {
@@ -17,8 +18,8 @@ public class FakeTossController {
     public Map<String, Object> confirm(@RequestBody Map<String, Object> body) {
         // body: { paymentKey, orderId, amount }
         String paymentKey = String.valueOf(body.get("paymentKey"));
-        String orderId    = String.valueOf(body.get("orderId"));
-        Integer amount    = (body.get("amount") == null) ? null : (Integer) body.get("amount");
+        String orderId = String.valueOf(body.get("orderId"));
+        Integer amount = (body.get("amount") == null) ? null : (Integer) body.get("amount");
 
         Map<String, Object> res = new HashMap<>();
         res.put("paymentKey", paymentKey);

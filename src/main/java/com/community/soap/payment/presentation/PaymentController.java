@@ -1,9 +1,9 @@
 package com.community.soap.payment.presentation;
 
-import com.community.soap.payment.application.CancelPaymentRequest;
-import com.community.soap.payment.application.ConfirmPaymentRequest;
-import com.community.soap.payment.application.ConfirmPaymentResponse;
 import com.community.soap.payment.application.PaymentService;
+import com.community.soap.payment.application.request.CancelPaymentRequest;
+import com.community.soap.payment.application.request.ConfirmPaymentRequest;
+import com.community.soap.payment.application.response.ConfirmPaymentResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,6 +44,7 @@ public class PaymentController {
             @PathVariable String paymentKey,
             @RequestBody CancelPaymentRequest req
     ) {
-        return ResponseEntity.ok(paymentService.cancel(paymentKey, req.cancelReason(), req.cancelAmount()));
+        return ResponseEntity.ok(
+                paymentService.cancel(paymentKey, req.cancelReason(), req.cancelAmount()));
     }
 }
