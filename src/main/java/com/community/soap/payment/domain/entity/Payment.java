@@ -5,17 +5,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 @Entity
 @Table(name = "p_payment")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
+
     @Id
     @Column(name = "payment_id")
     private Long paymentId;
@@ -51,15 +53,28 @@ public class Payment {
         this.amount = amount;
         this.createdAt = LocalDateTime.now();
     }
+
     public static Payment pending(Long id, String paymentKey, String orderId, Integer amount) {
         return new Payment(id, paymentKey, orderId, amount);
     }
-    public void markApproved(String method, String status, String approvedAtIso, String receiptUrl) {
+
+    public void markApproved(String method, String status, String approvedAt, String receiptUrl) {
         this.method = method;
         this.status = status;
         this.receiptUrl = receiptUrl;
-        if (approvedAtIso != null) this.approvedAt = LocalDateTime.parse(approvedAtIso);
+
+        if (approvedAt != null) {
+            try {
+                // "+09:00" 같은 오프셋 포함 문자열 처리
+                OffsetDateTime odt = OffsetDateTime.parse(approvedAt);
+                this.approvedAt = odt.atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+            } catch (DateTimeParseException e) {
+                // 오프셋 없는 "yyyy-MM-dd'T'HH:mm:ss" 형태 대응
+                this.approvedAt = LocalDateTime.parse(approvedAt);
+            }
+        }
     }
+
     public void markCanceled(String status) {
         this.status = status;
     }
